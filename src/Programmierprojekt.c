@@ -101,24 +101,21 @@ int ausprobieren()
 
 
 */
-/*
+
 void test(){
 	char *test ="0001213   133";
 	int a,b;
 	koordinaten_auslesen(test, a,b);
 	printf("A: %d, B: %d",a,b);
 }
-*/
 
-/*
+
+
 
 int main(void) {
-
 	//einlesen();
 	//printf("%s\n",eingabe);
-
-
+	test();
 
 	return EXIT_SUCCESS;
 }
-*/

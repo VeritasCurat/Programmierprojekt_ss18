@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-int** Element_liste;
+int Element_liste[100000][2];
 
-void init();
-int suche(int x, int y);
-void listevergroessern();
-void einfuegen(int x, int y);
-int suche(int x, int y);
+extern void init();
+extern int suche(int x, int y);
+extern void listevergroessern();
+extern void einfuegen(int x, int y);
+extern int suche(int x, int y);
