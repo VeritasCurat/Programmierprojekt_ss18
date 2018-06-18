@@ -12,6 +12,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+int position=0;
+size_t liste_size = 100;
+
 
 void init(){
 /*
@@ -38,10 +41,10 @@ int suche(int x, int y){
 }
 
 void delete(int x, int y){
-		int suche = suche(x,y);
+		int suche_ = suche(x,y);
 		if(suche > 0){
-			Element_liste[suche][0]=-1;
-			Element_liste[suche][1]=-1;
+			Element_liste[suche_][0]=-1;
+			Element_liste[suche_][1]=-1;
 		}
 }
 
