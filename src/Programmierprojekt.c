@@ -111,6 +111,7 @@ void test(){
 
 
 
+/*
 
 int main(void) {
 	//einlesen();
@@ -119,3 +120,5 @@ int main(void) {
 
 	return EXIT_SUCCESS;
 }
+
+*/

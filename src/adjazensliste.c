@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+
 int position=0;
 size_t liste_size = 10000;
 
@@ -46,7 +47,6 @@ void delete(int x, int y){
 			Element_liste[suche_][1]=-1;
 		}
 }
-
 /*
 void listevergroessern(){
 	liste_size *= 2;
@@ -74,17 +74,27 @@ void einfuegen(int x, int y){
 void test_al(){
 	init();
 
-  einfuegen(5,1);
+	einfuegen(5,1);
 
 	printlist();
 }
 
-void sort(){
+static int comp(const void* a, const void* b) {
+  int* array1 = (int*) b;
+  int* array2 = (int*) b;
+  int diff1 = array1[0] - array2[0];
+  if (diff1) return diff1;
+  return array1[1] - array2[1];
+}
 
+void sort(){
+	 qsort(Element_liste, position, 2*sizeof(int), comp);
 }
 
 
-
 int main(){
-	test_al();
+	einfuegen(5,1);
+	einfuegen(2,0);
+	einfuegen(5,2);
+	sort();
 }
