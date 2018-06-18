@@ -85,7 +85,7 @@ void transformation(){
 			int *a;
 			koordinaten_auslesen(eingabe, a);
 
-			struct element *neu;
+			struct Element *neu;
 			neu->X=a[0];
 			neu->Y=a[1];
 
