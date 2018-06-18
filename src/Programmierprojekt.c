@@ -113,13 +113,15 @@ void test(){
 }
 
 
+/*
 
 int main(void) {
-	/*
-	einlesen();
-	printf("%s\n",eingabe);
-	*/
+
+	//einlesen();
+	//printf("%s\n",eingabe);
+
 
 
 	return EXIT_SUCCESS;
 }
+*/
