@@ -34,6 +34,18 @@ void printlist(){
 	}
 }
 
+void printraeume(){
+	int index =0;
+	while(R_anz[index] != 0){
+		printf("Raum %d:\n",index);
+		for(int i=0; i<R_anz[index]; i++){
+			printf("x: %d, y: %d\n", Raeume[index][i][0], Raeume[index][i][1]);
+		}
+
+		++index;
+	}
+}
+
 int suche(int x, int y){
 	for(int i=0; i< liste_size; i++){
 		if(Element_liste[i][0] == x && Element_liste[i][1] == y)return i;
