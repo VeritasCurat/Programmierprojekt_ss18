@@ -43,8 +43,11 @@ int chartoint(char c){
 	}
 }
 
-void koordinaten_auslesen(char* zeile, int a, int b){
-	a=b=0;
+void koordinate_einlesen(char* zeile){
+	int a,b=0;
+
+	printf("Zeile: %s\n",zeile);
+
 	int i=0;
 
 	for(;i<strlen(zeile); i++){
@@ -59,6 +62,7 @@ void koordinaten_auslesen(char* zeile, int a, int b){
 			a+=chartoint(zeile[i]);
 		}
 	}
+
 
 	for(;i<strlen(zeile); i++){
 			if(zeile[i]==' ')continue;
@@ -77,16 +81,25 @@ void koordinaten_auslesen(char* zeile, int a, int b){
 			if(zeile[i]==' ')continue;
 			if(chartoint(zeile[i]) != -1) break;
 	}
+	//printf("A: %d B: %d\n", a,b);
 
+	einfuegen(a,b);
 }
 
 void transformation(){
+	int anfang, ende =0;
 	for(int i=0; i<strlen(eingabe); i++){
 		if(eingabe[i] == '\n'){
-			int a,b;
-			koordinaten_auslesen(eingabe, a, b);
-			einfuegen(a,b);
+			char segment[ende-anfang+1] = malloc((ende-anfang+1) * sizeof(char));
+			for(int j=0; j<ende-anfang; j++){
+				segment[j] = (char) eingabe[j+anfang];
+			}
+			segment[ende-anfang+1] = '\0';
+			printf("%s\n",segment);
+			//koordinate_einlesen(segment);
+			anfang = ende;
 		}
+		ende = i;
 	}
 }
 
@@ -103,22 +116,40 @@ int ausprobieren()
 */
 
 void test(){
-	char *test ="0001213   133";
-	int a,b;
-	koordinaten_auslesen(test, a,b);
-	printf("A: %d, B: %d",a,b);
+	char *test ="0001213   133\n 213 541 \n 124 2";
+	eingabe = test;
+	transformation();
+
+	printlist();
 }
 
+void raeume(){
+	int breite, hoehe, index;
+	int[1000][100000][2] raeume;
 
+	while(index < position){
+		if(){
+			//nachbar hinzufuegen
+		}
+		else if(){//sprung in x)
+				if(){
+					//nachbar hinzufegen
+				}
+				else{
+					//raum beendet
+				}
+		}
+		++index;
+	}
 
-/*
+}
+
 
 int main(void) {
 	//einlesen();
 	//printf("%s\n",eingabe);
 	test();
 
+
 	return EXIT_SUCCESS;
 }
-
-*/

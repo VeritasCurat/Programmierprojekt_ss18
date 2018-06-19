@@ -63,7 +63,7 @@ void einfuegen(int x, int y){
 	*/
 
 
-	printlist();
+	//printlist();
 
 	Element_liste[position][0] = x;
 	Element_liste[position][1] = y;
@@ -80,7 +80,7 @@ void test_al(){
 }
 
 static int comp(const void* a, const void* b) {
-  int* array1 = (int*) b;
+  int* array1 = (int*) a;
   int* array2 = (int*) b;
   int diff1 = array1[0] - array2[0];
   if (diff1) return diff1;
@@ -91,10 +91,13 @@ void sort(){
 	 qsort(Element_liste, position, 2*sizeof(int), comp);
 }
 
-
+/*
 int main(){
+	einfuegen(10,2);
 	einfuegen(5,1);
 	einfuegen(2,0);
 	einfuegen(5,2);
 	sort();
+	printlist();
 }
+*/
