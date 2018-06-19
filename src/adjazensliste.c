@@ -17,6 +17,7 @@ int position=0;
 size_t liste_size = 10000;
 
 
+
 void init(){
 
 //	int (*Element_liste)[2] = malloc(sizeof(int[liste_size][2])); //TODO free(Element_liste)

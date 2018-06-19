@@ -1,10 +1,10 @@
 /*
  ============================================================================
  Name        : Programmierprojekt.c
- Author      :
+ Author      : Johannes Grobelski
  Version     :
  Copyright   : Your copyright notice
- Description : Hello World in C, Ansi-style
+ Description : Programmierprojekt SS18
  ============================================================================
  */
 
@@ -20,8 +20,8 @@ char* eingabe;
 void transformation();
 
 void einlesen(){
-	char buffer[10000];
-	if(read(STDIN_FILENO, buffer, 10000) == 0){
+	char buffer[100000];
+	if(read(STDIN_FILENO, buffer, 100000) == 0){
 
 	}
 	eingabe = buffer;
@@ -44,9 +44,9 @@ int chartoint(char c){
 }
 
 void koordinate_einlesen(char* zeile){
-	int a,b=0;
+	int a,b; a=b=0;
 
-	printf("Zeile: %s\n",zeile);
+	//printf("Zeile: %s\n",zeile);
 
 	int i=0;
 
@@ -82,24 +82,33 @@ void koordinate_einlesen(char* zeile){
 			if(chartoint(zeile[i]) != -1) break;
 	}
 	//printf("A: %d B: %d\n", a,b);
-
+	++anzKacheln;
 	einfuegen(a,b);
 }
 
 void transformation(){
 	int anfang, ende =0;
-	for(int i=0; i<strlen(eingabe); i++){
-		if(eingabe[i] == '\n'){
-			char segment[ende-anfang+1] = malloc((ende-anfang+1) * sizeof(char));
-			for(int j=0; j<ende-anfang; j++){
-				segment[j] = (char) eingabe[j+anfang];
+	for(int i=0; i<=strlen(eingabe); i++){
+
+		if(eingabe[i-1] == '\n' || i == strlen(eingabe)){
+			char segment[ende-anfang];
+			for(int i=0; i<ende-anfang+1; i++){
+				segment[i] = eingabe[i+anfang];
 			}
 			segment[ende-anfang+1] = '\0';
-			printf("%s\n",segment);
-			//koordinate_einlesen(segment);
-			anfang = ende;
+
+
+			//printf("Segment: %s\n",segment);
+			koordinate_einlesen(segment);
+
+
+			anfang = ende+1;
 		}
 		ende = i;
+	}
+	if(anzKacheln % 2 == 1){
+		printf("Lösung existiert nicht! UNgerade Anzahl an Kacheln (%d)", anzKacheln);
+		exit(0);
 	}
 }
 
@@ -116,17 +125,27 @@ int ausprobieren()
 */
 
 void test(){
-	char *test ="0001213   133\n 213 541 \n 124 2";
+	char *test = "0 0 \n"
+            	 "0 1\n"
+				 "0 3\n"
+				 "1 0 \n"
+				 "1 2\n"
+				 "1 3\n";
+
+
 	eingabe = test;
+	//printf("%s\n",eingabe);
+
+
 	transformation();
 
-	printlist();
+	//printlist();
 }
 
 void raeume(){
-	int breite, hoehe, index;
-	int[1000][100000][2] raeume;
+	int breite, hoehe, index = 0;
 
+	/*
 	while(index < position){
 		if(){
 			//nachbar hinzufuegen
@@ -141,14 +160,20 @@ void raeume(){
 		}
 		++index;
 	}
+	*/
 
 }
 
 
 int main(void) {
-	//einlesen();
-	//printf("%s\n",eingabe);
-	test();
+	setbuf(stdout, NULL); //Printout bug lösen
+
+	einlesen();
+	//test();
+
+
+	sort();
+	printlist();
 
 
 	return EXIT_SUCCESS;
