@@ -43,8 +43,8 @@ int chartoint(char c){
 	}
 }
 
-void koordinaten_auslesen(char* zeile, int *a){
-	a[0]=0; a[1]=0;
+void koordinaten_auslesen(char* zeile, int a, int b){
+	a=b=0;
 	int i=0;
 
 	for(;i<strlen(zeile); i++){
@@ -55,8 +55,8 @@ void koordinaten_auslesen(char* zeile, int *a){
 	for(;i<strlen(zeile); i++){
 		if(zeile[i]==' ')break;
 		if(chartoint(zeile[i]) != -1){
-			a[0]*=10;
-			a[0]+=chartoint(zeile[i]);
+			a*=10;
+			a+=chartoint(zeile[i]);
 		}
 	}
 
@@ -68,8 +68,8 @@ void koordinaten_auslesen(char* zeile, int *a){
 	for(;i<strlen(zeile); i++){
 			if(zeile[i]==' ')break;
 			if(chartoint(zeile[i]) != -1){
-				a[1]*=10;
-				a[1]+=chartoint(zeile[i]);
+				b*=10;
+				b+=chartoint(zeile[i]);
 			}
 	}
 
@@ -77,19 +77,15 @@ void koordinaten_auslesen(char* zeile, int *a){
 			if(zeile[i]==' ')continue;
 			if(chartoint(zeile[i]) != -1) break;
 	}
+
 }
 
 void transformation(){
 	for(int i=0; i<strlen(eingabe); i++){
 		if(eingabe[i] == '\n'){
-			int *a;
-			koordinaten_auslesen(eingabe, a);
-
-			struct Element *neu;
-			neu->X=a[0];
-			neu->Y=a[1];
-
-			einfuegen(&neu);
+			int a,b;
+			koordinaten_auslesen(eingabe, a, b);
+			einfuegen(a,b);
 		}
 	}
 }
@@ -105,23 +101,24 @@ int ausprobieren()
 
 
 */
+
 void test(){
 	char *test ="0001213   133";
-	int *a;
-	koordinaten_auslesen(test, a);
-	printf("A: %d, B: %d", a[0],a[1]);
+	int a,b;
+	koordinaten_auslesen(test, a,b);
+	printf("A: %d, B: %d",a,b);
 }
+
 
 
 /*
 
 int main(void) {
-
 	//einlesen();
 	//printf("%s\n",eingabe);
-
-
+	test();
 
 	return EXIT_SUCCESS;
 }
+
 */
