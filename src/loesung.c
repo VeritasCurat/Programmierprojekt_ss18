@@ -269,12 +269,19 @@ int main(){
 
 void einlesen(){
 	char buffer[1000000];
+	int fd[2];
+	while(read(fd, buffer, sizeof(buffer)) != 0){
+			strcat(eingabe, buffer);
+			strcat(eingabe, "      ");
+
+	}
+	/*
 	while(fgets(buffer, sizeof(buffer), stdin) != NULL){
 		strcat(eingabe, buffer);
 		strcat(eingabe, "      ");
 
 	}
-
+	*/
 
 }
 
@@ -298,7 +305,7 @@ void koordinate_einlesen(char* zeile){
 	unsigned int a,b; a=b=0;
 	strcat(zeile, "");
 
-	printf("Zeile: %s\n",zeile);
+	//printf("Zeile: %s\n",zeile);
 
 	int i=0;
 
@@ -335,7 +342,7 @@ void koordinate_einlesen(char* zeile){
 	}
 	if(a > 4294967296 || b > 4294967296)exit(-1);
 		 //4294967291
-	printf("A: %u B: %u\n", a,b);
+	//printf("A: %u B: %u\n", a,b);
 	++anzKacheln; ++EL_anz;
 	einfuegen(a,b);
 }
@@ -480,7 +487,7 @@ void funktionstestH(){
 void raeume_prim(){
 	//printf("liste: ");printlist();
 
-	int index = 0;
+	unsigned int index = 0;
 	int gruppiert = 0;
 
 	while(gruppiert < EL_anz){
@@ -505,8 +512,8 @@ void raeume_prim(){
 
 				do{
 					aenderungen=0;
-					for(int i=0; i<R_anz[index]; i++){
-						for(int j=0; j<anzKacheln; j++){
+					for(unsigned int i=0; i<R_anz[index]; i++){
+						for(unsigned int j=0; j<anzKacheln; j++){
 							//printf("bachbart?: (%d,%d)(%d,%d)\n", Raeume[index][i][0],Raeume[index][i][1], Element_liste[j][0], Element_liste[j][1]);
 							if(benachbart(Raeume[index][i], Element_liste[j]) == 1){
 								//printf("    bachbart: (%d,%d)(%d,%d)\n", Raeume[index][i][0],Raeume[index][i][1], Element_liste[j][0], Element_liste[j][1]);
@@ -560,6 +567,8 @@ void raeume_linearH(){
 				int i=0;
 				int k=0;
 				while(i <= R_anz[index]){
+					if(gruppiert % 100 <5)printf("raeume: %d / %d",gruppiert,anzKacheln);
+
 					//printf("		Betrachte: (%d,%d)\n",Raeume[index][i][0],Raeume[index][i][1]);
 					//linker Nachbar?
 						k = H_suchen(Raeume[index][i][0],Raeume[index][i][1]-1);
@@ -661,13 +670,17 @@ int main(void) {
 
 
 
-	einlesen();
+	einlesen(); //Dauert bei ex4 schon 60s
 
 	//test();
 
-
+printf("eingelesen ... !");
 	transformation();
+
+printf("transformiert ... !");
+
 	H_hashtabelle_erstellen();
+printf("hs angefertigt ... !");
 
 
 	//sort();
