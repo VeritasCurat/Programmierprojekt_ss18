@@ -14,17 +14,22 @@
 #include <string.h>
 
 #include "adjazensliste.h"
+#include "hashtabelle.h"
 
-char* eingabe;
+char strategie = 'b'; //s=sortieren, h=hashing, b=beides
+
+char eingabe[100000];
 
 void transformation();
 
 void einlesen(){
 	char buffer[100000];
-	if(read(STDIN_FILENO, buffer, 100000) == 0){
-
+	while(fgets(buffer, sizeof(buffer), stdin) != NULL){
+		strcat(eingabe, buffer);
 	}
-	eingabe = buffer;
+
+	transformation();
+	sort();
 }
 
 int chartoint(char c){
@@ -85,19 +90,22 @@ void koordinate_einlesen(char* zeile){
 	//printf("A: %d B: %d\n", a,b);
 	++anzKacheln; ++EL_anz;
 	einfuegen(a,b);
+	if(strategie == 'b')eintragen(a,b);
 }
 
 void transformation(){
-	int anfang, ende =0;
-	for(int i=0; i<=strlen(eingabe); i++){
 
-		if(eingabe[i-1] == '\n' || i == strlen(eingabe)){
+	int anfang = 0; int ende =0;
+	for(int i=0; i<strlen(eingabe); i++){
+
+		if(eingabe[i] == '\n' || i == strlen(eingabe)){
+			ende = i;
+
 			char segment[ende-anfang];
-			for(int i=0; i<ende-anfang+1; i++){
+			for(int i=0; i<ende-anfang; i++){
 				segment[i] = eingabe[i+anfang];
 			}
-			segment[ende-anfang+1] = '\0';
-
+			//segment[ende-anfang+1] = '\0';
 
 			//printf("Segment: %s\n",segment);
 			koordinate_einlesen(segment);
@@ -108,7 +116,7 @@ void transformation(){
 		ende = i;
 	}
 	if(anzKacheln % 2 == 1){
-		printf("Lösung existiert nicht! UNgerade Anzahl an Kacheln (%d)", anzKacheln);
+		printf("Loesung existiert nicht! UNgerade Anzahl an Kacheln (%d)", anzKacheln);
 		exit(0);
 	}
 }
@@ -191,7 +199,6 @@ char * test ="0 0\n"
 			"1 0\n";
 */
 
-	eingabe = test;
 	//printf("%s\n",eingabe);
 
 
@@ -208,7 +215,7 @@ void funktionstest1(){
 
 }
 
-//quadr. lösung
+//n*|raeuem| loesung
 void raeume_prim(){
 	//printf("liste: ");printlist();
 
@@ -266,6 +273,28 @@ void raeume_prim(){
 
 }
 
+
+void raueme_prim2(){
+	int index;
+	int gruppiert =0; //anzahl der von EL gruppierten Elemente
+	int sprungR[1000];
+	int sprungU[1000];
+	for(int i=0; i<1000; i++){
+		sprungU[i] = 0; sprungR=0;
+	}
+
+	while(gruppiert < anzKacheln){
+
+
+
+		++index;
+	}
+
+
+	//gehe durch
+}
+
+//quadr. loesung
 //quadr. lösung
 void loesung_prim(int index){
 	int p,q;
@@ -284,9 +313,9 @@ void loesung_prim(int index){
 int main(void) {
 	setbuf(stdout, NULL); //Printout bug lösen
 
-	//einlesen();
+	einlesen();
 
-	test();
+	//test();
 
 
 	sort();
