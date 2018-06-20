@@ -24,10 +24,6 @@ char eingabe[100000];
 	int Hash_liste[999983][2];
 	int H_P = 999983;
 
-	void H_init();
-	void H_eintragen(int x, int y);
-	int H_suchen(int x, int y);
-
 //Adjazensliste + sort
 	int Element_liste[100000][2]; int EL_anz;
 	int Loesung_liste[100000][4];
