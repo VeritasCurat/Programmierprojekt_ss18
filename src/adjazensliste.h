@@ -7,8 +7,6 @@ int Loesung_liste[100000][4];
 
 int Raeume[100][100000][2]; int R_anz[100];
 
-
-
 int anzKacheln;
 
 

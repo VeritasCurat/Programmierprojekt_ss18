@@ -6,11 +6,18 @@
  */
 
 
-#include "adjazensliste.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+
+int Element_liste[100000][2]; int EL_anz;
+int Loesung_liste[100000][4];
+
+int Raeume[100][100000][2]; int R_anz[100];
+
+int anzKacheln;
 
 
 int position=0;

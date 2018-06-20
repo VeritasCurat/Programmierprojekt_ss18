@@ -13,23 +13,187 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "adjazensliste.h"
-#include "hashtabelle.h"
-
 char strategie = 'b'; //s=sortieren, h=hashing, b=beides
 
 char eingabe[100000];
 
-void transformation();
+
+//Hashing
+	int maxNEXT = 10;
+	int H_belegt = 0;
+	int Hash_liste[999983][2];
+	int H_P = 999983;
+
+	void H_init();
+	void H_eintragen(int x, int y);
+	int H_suchen(int x, int y);
+
+//Adjazensliste + sort
+	int Element_liste[100000][2]; int EL_anz;
+	int Loesung_liste[100000][4];
+	int Raeume[100][100000][2]; int R_anz[100];
+	int anzKacheln;
+	int position=0;
+	size_t liste_size = 10000;
+
+
+
+//HS: (x,y) -> 1000*x + 10*y % P
+void H_init(){
+	for(int i=0; i<H_P; i++){
+		Hash_liste[i][0] = -1; Hash_liste[i][1] = -1;
+	}
+}
+
+void H_eintragen(int x, int y){
+	if(H_belegt == H_P){
+		printf("Hashtabelle voll!");
+		exit(-1);
+	}
+	int k =1000*x + 10*y % H_P;
+	if(Hash_liste[k][0] == -1 && Hash_liste[k][1] ==-1){
+		Hash_liste[k][0] = x; Hash_liste[k][1] = y;
+	}
+	else {
+		//inplace hashing
+		int next=2;
+		while(Hash_liste[k*next*next % H_P][0] == -1 && Hash_liste[k*next*next % H_P][1] ==-1){
+			if(next == maxNEXT){ //problem: max. def. dichte erreicht => abbruch
+				printf("Hashtabelle zu dicht belegt!");
+				exit(-1);
+			}
+			++next;
+		}
+		Hash_liste[k*next*next % H_P][0] = x; Hash_liste[k*next*next % H_P][1] = y;
+
+	}
+}
+
+int H_suchen(int x, int y){
+	int k =1000*x + 10*y %H_P;
+	if(Hash_liste[k][0] == x && Hash_liste[k][1] ==y){
+		return k;
+	}
+	else {
+		//inplace hashing
+		int next=2;
+		while(Hash_liste[k*next*next % H_P][0] != x && Hash_liste[k*next*next % H_P][1] != y){
+			if(next == maxNEXT){ //problem: max. def. dichte erreicht => abbruch
+				return 0;
+			}
+			++next;
+		}
+	}
+	return 0;
+}
+
+void init(){
+
+//	int (*Element_liste)[2] = malloc(sizeof(int[liste_size][2])); //TODO free(Element_liste)
+
+	for(int i=0; i<liste_size; i++){
+		Element_liste[i][0] = -1; Element_liste[i][1] = -1;
+	}
+
+}
+
+void printlist(){
+	for(int i=0; i<position; i++){
+				printf("%d: A: %d, B: %d\n", i, Element_liste[i][0] , Element_liste[i][1]);
+	}
+}
+
+void printraeume(){
+	int index =0;
+	while(R_anz[index] != 0){
+		printf("Raum %d:\n",index);
+		for(int i=0; i<R_anz[index]; i++){
+			printf("x: %d, y: %d\n", Raeume[index][i][0], Raeume[index][i][1]);
+		}
+
+		++index;
+	}
+}
+
+int suche(int x, int y){
+	for(int i=0; i< liste_size; i++){
+		if(Element_liste[i][0] == x && Element_liste[i][1] == y)return i;
+	}
+	return -1;
+}
+
+void delete(int x, int y){
+		int suche_ = suche(x,y);
+		if(suche > 0){
+			Element_liste[suche_][0]=-1;
+			Element_liste[suche_][1]=-1;
+		}
+}
+/*
+void listevergroessern(){
+	liste_size *= 2;
+	Element_liste = (int **)  realloc(Element_liste, (liste_size * 2) * sizeof(int)*2);
+}
+*/
+
+void einfuegen(int x, int y){
+
+	/*
+	if(position == liste_size){
+		listevergroessern();
+	}
+	*/
+
+
+	//printlist();
+
+	Element_liste[position][0] = x;
+	Element_liste[position][1] = y;
+
+	++position;
+}
+
+void test_al(){
+	init();
+
+	einfuegen(5,1);
+
+	printlist();
+}
+
+static int comp(const void* a, const void* b) {
+  int* array1 = (int*) a;
+  int* array2 = (int*) b;
+  int diff1 = array1[0] - array2[0];
+  if (diff1) return diff1;
+  return array1[1] - array2[1];
+}
+
+void sort(){
+	 qsort(Element_liste, position, 2*sizeof(int), comp);
+}
+
+/*
+int main(){
+	einfuegen(10,2);
+	einfuegen(5,1);
+	einfuegen(2,0);
+	einfuegen(5,2);
+	sort();
+	printlist();
+}
+*/
+
 
 void einlesen(){
-	char buffer[100000];
+	char buffer[10000];
 	while(fgets(buffer, sizeof(buffer), stdin) != NULL){
 		strcat(eingabe, buffer);
 	}
 
+	printf("Eingabe: %s\n",eingabe);
+
 	transformation();
-	sort();
 }
 
 int chartoint(char c){
@@ -90,11 +254,10 @@ void koordinate_einlesen(char* zeile){
 	//printf("A: %d B: %d\n", a,b);
 	++anzKacheln; ++EL_anz;
 	einfuegen(a,b);
-	if(strategie == 'b')eintragen(a,b);
+	if(strategie == 'b')H_eintragen(a,b);
 }
 
 void transformation(){
-
 	int anfang = 0; int ende =0;
 	for(int i=0; i<strlen(eingabe); i++){
 
@@ -144,10 +307,13 @@ int benachbart(int a[], int b[]){
 }
 
 void test(){
+
+/*
 char * test ="0 0\n"
 			 "1 0\n"
 			 "1 1\n"
 			 "2 1";
+*/
 /*
 	char *test = "1 3\n"
 			"5 2\n"
@@ -274,14 +440,11 @@ void raeume_prim(){
 }
 
 
-void raueme_prim2(){
+void raueme_primH(){
 	int index;
 	int gruppiert =0; //anzahl der von EL gruppierten Elemente
-	int sprungR[1000];
-	int sprungU[1000];
-	for(int i=0; i<1000; i++){
-		sprungU[i] = 0; sprungR=0;
-	}
+
+
 
 	while(gruppiert < anzKacheln){
 
@@ -293,17 +456,6 @@ void raueme_prim2(){
 
 	//gehe durch
 }
-
-//quadr. loesung
-//quadr. lösung
-void loesung_prim(int index){
-	int p,q;
-	for(int i=0; i<2^R_anz[100]; ++i){
-
-	}
-
-}
-
 //tauscht solange indezes, bis alle benachbart sind: raueme_bubble
 
 
@@ -312,6 +464,8 @@ void loesung_prim(int index){
 
 int main(void) {
 	setbuf(stdout, NULL); //Printout bug lösen
+
+	printf("TEST!");
 
 	einlesen();
 

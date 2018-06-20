@@ -5,7 +5,11 @@
  *      Author: Johannes
  */
 
-#include "hashtabelle.h"
+int maxNEXT = 10;
+
+int H_belegt = 0;
+int Hash_liste[999983][2];
+int P = 999983;
 
 //HS: (x,y) -> 1000*x + 10*y % P
 
@@ -16,7 +20,7 @@ void H_init(){
 }
 
 void H_eintragen(int x, int y){
-	if(belegt == P){
+	if(H_belegt == P){
 		printf("Hashtabelle voll!");
 		exit(-1);
 	}
