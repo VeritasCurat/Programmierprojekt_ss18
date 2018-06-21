@@ -3,7 +3,7 @@
  Name        : Programmierprojekt.c
  Author      : Johannes Grobelski
  Version     :
- Copyright   : Your copyright notice
+ Copyright   : Your copyright noticeo,,,
  Description : Programmierprojekt SS18
  ============================================================================
  */
@@ -15,7 +15,6 @@
 
 char strategie = 'b'; //s=sortieren, h=hashing, b=beides
 
-char eingabe[1000000000];
 
 
 
@@ -32,7 +31,9 @@ char eingabe[1000000000];
 //Adjazensliste + sort
 	unsigned int Element_liste[100000][2]; int EL_anz;
 	unsigned int Loesung_liste[100000][4];
-	unsigned int Raeume[100][100000][2]; int R_anz[100];
+	unsigned int Raeume[100][100000][2]; int R__El_anz[100];
+	unsigned int Loesung_Raeume[100][100000][4]; int R__El_anz[100];
+
 	unsigned int anzKacheln;
 	int position=0;
 	size_t liste_size = 10000;
@@ -187,9 +188,9 @@ void printlist(){
 
 void printraeume(){
 	int index =0;
-	while(R_anz[index] != 0){
+	while(R__El_anz[index] != 0){
 		printf("Raum %d:\n",index);
-		for(int i=0; i<R_anz[index]; i++){
+		for(int i=0; i<R__El_anz[index]; i++){
 			printf("x: %d, y: %d\n", Raeume[index][i][0], Raeume[index][i][1]);
 		}
 
@@ -226,21 +227,12 @@ void einfuegen(int x, int y){
 	}
 	*/
 
-
 	//printlist();
 
 	Element_liste[position][0] = x;
 	Element_liste[position][1] = y;
 
 	++position;
-}
-
-void test_al(){
-	init();
-
-	einfuegen(5,1);
-
-	printlist();
 }
 
 static int comp(const void* a, const void* b) {
@@ -266,25 +258,6 @@ int main(){
 }
 */
 
-
-void einlesen(){
-	char buffer[1000000];
-	int fd[2];
-	while(read(fd, buffer, sizeof(buffer)) != 0){
-			strcat(eingabe, buffer);
-			strcat(eingabe, "      ");
-
-	}
-	/*
-	while(fgets(buffer, sizeof(buffer), stdin) != NULL){
-		strcat(eingabe, buffer);
-		strcat(eingabe, "      ");
-
-	}
-	*/
-
-}
-
 unsigned int chartoint(char c){
 	switch(c){
 		case '0': return 0; break;
@@ -303,7 +276,6 @@ unsigned int chartoint(char c){
 
 void koordinate_einlesen(char* zeile){
 	unsigned int a,b; a=b=0;
-	strcat(zeile, "");
 
 	//printf("Zeile: %s\n",zeile);
 
@@ -316,9 +288,13 @@ void koordinate_einlesen(char* zeile){
 
 	for(;i<strlen(zeile); i++){
 		if(zeile[i]==' ')break;
-		if(chartoint(zeile[i]) != -1){
+		else if(chartoint(zeile[i]) != -1){
 			a*=(unsigned) 10;
 			a+=(unsigned) chartoint(zeile[i]);
+		}
+		else {
+			printf("illegales Zeichen! (%c)\n",zeile[i]);
+			exit(-1);
 		}
 	}
 
@@ -329,10 +305,14 @@ void koordinate_einlesen(char* zeile){
 	}
 
 	for(;i<strlen(zeile); i++){
-			if(zeile[i]==' ')break;
-			if(chartoint(zeile[i]) != -1){
+			if(zeile[i]==' ' || zeile[i]=='\n')break;
+			else if(chartoint(zeile[i]) != -1){
 				b*=(unsigned) 10;
 				b+=(unsigned) chartoint(zeile[i]);
+			}
+			else {
+				printf("illegales Zeichen! (%c)\n",zeile[i]);
+				exit(-1);
 			}
 	}
 
@@ -340,14 +320,28 @@ void koordinate_einlesen(char* zeile){
 			if(zeile[i]==' ')continue;
 			if(chartoint(zeile[i]) != -1) break;
 	}
-	if(a > 4294967296 || b > 4294967296)exit(-1);
+	if(a >= 4294967296 || b >= 4294967296)exit(-1); //TODO: ueberlauf
 		 //4294967291
 	//printf("A: %u B: %u\n", a,b);
 	++anzKacheln; ++EL_anz;
 	einfuegen(a,b);
 }
 
-void transformation(){
+void einlesen(){
+	char buffer[1000000];
+
+
+	while(fgets(buffer, sizeof(buffer), stdin) != NULL){
+		koordinate_einlesen(buffer);
+	}
+
+
+}
+
+
+
+
+void transformation(char* eingabe){
 	//printf("Eingabe: %s\n",eingabe);
 	int anfang = 0; int ende =0;
 	for(int i=0; i<strlen(eingabe); i++){
@@ -392,10 +386,15 @@ int abs(int a){
 	return a;
 }
 
-int benachbart(int a[], int b[]){
-	if(abs(b[0] - a[0]) + abs(b[1] - a[1]) == 1) return 1;
+
+unsigned int benachbart(unsigned int a[2], unsigned int b[2]){
+	int k= abs(b[0] - a[0]) + abs(b[1] - a[1]) == 1;
+	if(k == 1) return 1;
 	return 0;
 }
+
+
+
 
 void test(){
 
@@ -412,67 +411,17 @@ char * test ="0 0\n"
 			 "1 2\n"
 			 "1 3\n";
 
-/*
-	char *test = "1 3\n"
-			"5 2\n"
-			"6 4\n"
-			"5 6\n"
-			"1 7\n"
-			"5 3\n"
-			"5 1\n"
-			"4 5\n"
-			"4 7\n"
-			"5 7\n"
-			"7 3\n"
-			"4 4\n"
-			"3 6\n"
-			"1 4\n"
-			"0 3\n"
-			"7 0\n"
-			"3 7\n"
-			"2 5\n"
-			"4 0\n"
-			"6 7\n"
-			"6 2\n"
-			"7 6\n"
-			"2 7\n"
-			"7 2\n"
-			"7 4\n"
-			"6 1\n"
-			"4 1\n"
-			"5 5\n"
-			"1 6\n"
-			"2 4\n"
-			"7 7\n"
-			"3 2\n"
-			"4 6\n"
-			"2 0\n"
-			"1 2\n"
-			"2 6\n"
-			"3 4\n"
-			"6 0\n"
-			"2 2\n"
-			"0 2\n"
-			"6 6\n"
-			"0 6\n"
-			"4 2\n"
-			"0 7\n"
-			"5 0\n"
-			"3 1\n"
-			"6 3\n"
-			"1 0\n";
-*/
+
 
 	//printf("%s\n",eingabe);
 
-	strcat(eingabe, test);
-
+	transformation(test);
 	//printlist();
 }
 
 void funktionstest1(){
-	int a[] = {1,1};
-	int b[] = {0,2};
+ unsigned	int a[] = {1,1};
+ unsigned int b[] = {0,2};
 
 	printf("benachbart(a,b): %d\n",benachbart(a,b));
 }
@@ -482,7 +431,7 @@ void funktionstestH(){
 
 
 }
-
+/*
 //n*|raeuem| loesung
 void raeume_prim(){
 	//printf("liste: ");printlist();
@@ -497,7 +446,7 @@ void raeume_prim(){
 					Raeume[index][0][0] = Element_liste[k][0];
 					Raeume[index][0][1] = Element_liste[k][1];
 
-				    ++R_anz[index];
+				    ++R__El_anz[index];
 
 				    Element_liste[k][0] =-1; Element_liste[k][1] =-1;
 				    ++gruppiert;
@@ -512,21 +461,21 @@ void raeume_prim(){
 
 				do{
 					aenderungen=0;
-					for(unsigned int i=0; i<R_anz[index]; i++){
+					for(unsigned int i=0; i<R__El_anz[index]; i++){
 						for(unsigned int j=0; j<anzKacheln; j++){
 							//printf("bachbart?: (%d,%d)(%d,%d)\n", Raeume[index][i][0],Raeume[index][i][1], Element_liste[j][0], Element_liste[j][1]);
 							if(benachbart(Raeume[index][i], Element_liste[j]) == 1){
 								//printf("    bachbart: (%d,%d)(%d,%d)\n", Raeume[index][i][0],Raeume[index][i][1], Element_liste[j][0], Element_liste[j][1]);
 
-								Raeume[index][R_anz[index]][0] = Element_liste[j][0];
-								Raeume[index][R_anz[index]][1] = Element_liste[j][1];
-								//printf("gruppe(%d): (%d,%d)\n", index, Raeume[index][R_anz[index]][0],  Raeume[index][R_anz[index]][1]);
+								Raeume[index][R__El_anz[index]][0] = Element_liste[j][0];
+								Raeume[index][R__El_anz[index]][1] = Element_liste[j][1];
+								//printf("gruppe(%d): (%d,%d)\n", index, Raeume[index][R__El_anz[index]][0],  Raeume[index][R__El_anz[index]][1]);
 
 
 								Element_liste[j][0] = -1; Element_liste[j][1]=-1;
 								++aenderungen;
 								++gruppiert;
-								++R_anz[index];
+								++R__El_anz[index];
 							}
 						}
 					}
@@ -540,7 +489,7 @@ void raeume_prim(){
 	}
 
 }
-
+*/
 
 void raeume_linearH(){
 	int index = 0;
@@ -553,7 +502,7 @@ void raeume_linearH(){
 						if(H_abfrage_gruppiert(Element_liste[k][0],Element_liste[k][1]) > -1)continue;
 						Raeume[index][0][0] = Element_liste[k][0];
 						Raeume[index][0][1] = Element_liste[k][1];
-					    ++R_anz[index];
+					    ++R__El_anz[index];
 
 						H_gruppieren(Element_liste[k][0],Element_liste[k][1]);
 					    Element_liste[k][0] =-1; Element_liste[k][1] =-1;
@@ -566,8 +515,8 @@ void raeume_linearH(){
 
 				int i=0;
 				int k=0;
-				while(i <= R_anz[index]){
-					if(gruppiert % 100 <5)printf("raeume: %d / %d",gruppiert,anzKacheln);
+				while(i <= R__El_anz[index]){
+					//if(gruppiert % 100 <5)printf("raeume: %d / %d",gruppiert,anzKacheln);
 
 					//printf("		Betrachte: (%d,%d)\n",Raeume[index][i][0],Raeume[index][i][1]);
 					//linker Nachbar?
@@ -581,10 +530,10 @@ void raeume_linearH(){
 							else{
 								//printf("		Nachbarn eintragen: (%d,%d) (%d,%d)\n",Raeume[index][i][0],Raeume[index][i][1],Hash_liste[k][0],Hash_liste[k][1]);
 
-								Raeume[index][R_anz[index]][0] = Hash_liste[k][0];
-								Raeume[index][R_anz[index]][1] = Hash_liste[k][1];
+								Raeume[index][R__El_anz[index]][0] = Hash_liste[k][0];
+								Raeume[index][R__El_anz[index]][1] = Hash_liste[k][1];
 								H_gruppieren(Hash_liste[k][0],Hash_liste[k][1]);
-								++R_anz[index]; ++gruppiert;
+								++R__El_anz[index]; ++gruppiert;
 							}
 							if(gruppiert == anzKacheln)break;
 						}
@@ -600,10 +549,10 @@ void raeume_linearH(){
 							else{
 								//printf("		Nachbarn eintragen: (%d,%d) (%d,%d)\n",Raeume[index][i][0],Raeume[index][i][1],Hash_liste[k][0],Hash_liste[k][1]);
 
-								Raeume[index][R_anz[index]][0] = Hash_liste[k][0];
-								Raeume[index][R_anz[index]][1] = Hash_liste[k][1];
+								Raeume[index][R__El_anz[index]][0] = Hash_liste[k][0];
+								Raeume[index][R__El_anz[index]][1] = Hash_liste[k][1];
 								H_gruppieren(Hash_liste[k][0],Hash_liste[k][1]);
-								++R_anz[index]; ++gruppiert;
+								++R__El_anz[index]; ++gruppiert;
 							}
 							if(gruppiert == anzKacheln)break;
 						}
@@ -619,10 +568,10 @@ void raeume_linearH(){
 							else{
 								//printf("		Nachbarn eintragen: (%d,%d) (%d,%d)\n",Raeume[index][i][0],Raeume[index][i][1],Hash_liste[k][0],Hash_liste[k][1]);
 
-								Raeume[index][R_anz[index]][0] = Hash_liste[k][0];
-								Raeume[index][R_anz[index]][1] = Hash_liste[k][1];
+								Raeume[index][R__El_anz[index]][0] = Hash_liste[k][0];
+								Raeume[index][R__El_anz[index]][1] = Hash_liste[k][1];
 								H_gruppieren(Hash_liste[k][0],Hash_liste[k][1]);
-								++R_anz[index]; ++gruppiert;
+								++R__El_anz[index]; ++gruppiert;
 							}
 							if(gruppiert == anzKacheln)break;
 						}
@@ -638,15 +587,15 @@ void raeume_linearH(){
 							else{
 								//printf("		Nachbarn eintragen: (%d,%d) (%d,%d)\n",Raeume[index][i][0],Raeume[index][i][1],Hash_liste[k][0],Hash_liste[k][1]);
 
-								Raeume[index][R_anz[index]][0] = Hash_liste[k][0];
-								Raeume[index][R_anz[index]][1] = Hash_liste[k][1];
+								Raeume[index][R__El_anz[index]][0] = Hash_liste[k][0];
+								Raeume[index][R__El_anz[index]][1] = Hash_liste[k][1];
 								H_gruppieren(Hash_liste[k][0],Hash_liste[k][1]);
-								++R_anz[index]; ++gruppiert;
+								++R__El_anz[index]; ++gruppiert;
 							}
 							if(gruppiert == anzKacheln)break;
 						}
 
-						//printf("		i=%d / Anzahl Element(Raum)=%d\n",i,R_anz[index]);
+						//printf("		i=%d / Anzahl Element(Raum)=%d\n",i,R__El_anz[index]);
 
 						++i;
 				}
@@ -658,16 +607,183 @@ void raeume_linearH(){
 
 }
 
+void greedy(){
+
+}
+
+int loesung_prim(unsigned int kacheln[][2], unsigned int loesung[][4], int index_loesung){
+	if(index_loesung == anzKacheln/2){
+		return 1;
+
+	} //gueltige loesung
+
+	/*
+	1. wiederhole, solange es noch neue Teil-Lösungsschritte gibt:
+	     a) wähle einen neuen Teil-Lösungsschritt;
+	     b) falls Wahl gültig ist:
+	               I) erweitere Vektor um Wahl;
+	              II) falls Vektor vollständig ist, return true; // Lösung gefunden!
+	                  sonst:
+	                       falls (FindeLoesung(Stufe+1, Vektor)) return true; // Lösung!
+	                       sonst mache Wahl rückgängig; // Sackgasse (Backtracking)!
+	  2. Da es keinen neuen Teil-Lösungsschritt gibt: return false // Keine Lösung!
+ 	*/
+
+		int a[2];
+		int nachbar[2];
+		int k=0;
+
+		int l=0;
+
+		//1. nehme erste verbleibende
+			for(int i=0; i<anzKacheln; i++){
+				if(kacheln[i][0] != -1 && kacheln[i][1] != -1){
+					a[0] = kacheln[i][0];
+					a[1] = kacheln[i][1];
+				}
+			}
+
+		//2. suche Nachbarn
+			//rechter Nachbarn?
+			k = H_suchen(a[0], a[1]+1);
+			if(k > 0){
+				//TODO: Funktion
+				nachbar[0] = Element_liste[k][0];
+				nachbar[1] = Element_liste[k][0];
+
+				kacheln[k][0] =-1;
+				kacheln[k][1] =-1;
+
+				loesung[index_loesung+1][0] = a[0];
+				loesung[index_loesung+1][1] = a[1];
+				loesung[index_loesung+1][2] = nachbar[0];
+				loesung[index_loesung+1][3] = nachbar[1];
+
+				l = loesung_prim(kacheln, loesung, ++index_loesung);
+
+				if(l == 1) return 1;
+				else{
+					//teilloesung nicht valide => rollback
+					loesung[index_loesung+1][0] = -1;
+					loesung[index_loesung+1][1] = -1;
+					loesung[index_loesung+1][2] = -1;
+					loesung[index_loesung+1][3] = -1;
+
+					kacheln[k][0] =Element_liste[k][0];
+					kacheln[k][1] =Element_liste[k][1];
+				}
+			}
+
+
+
+			//linker Nachbarn?
+			k = H_suchen(a[0], a[1]-1);
+			if(k > 0){
+				//TODO: Funktion
+				nachbar[0] = Element_liste[k][0];
+				nachbar[1] = Element_liste[k][0];
+
+				kacheln[k][0] =-1;
+				kacheln[k][1] =-1;
+
+				loesung[index_loesung+1][0] = a[0];
+				loesung[index_loesung+1][1] = a[1];
+				loesung[index_loesung+1][2] = nachbar[0];
+				loesung[index_loesung+1][3] = nachbar[1];
+
+				l = loesung_prim(kacheln, loesung, ++index_loesung);
+
+				if(l == 1) return 1;
+				else{
+					//teilloesung nicht valide => rollback
+					loesung[index_loesung+1][0] = -1;
+					loesung[index_loesung+1][1] = -1;
+					loesung[index_loesung+1][2] = -1;
+					loesung[index_loesung+1][3] = -1;
+
+					kacheln[k][0] =Element_liste[k][0];
+					kacheln[k][1] =Element_liste[k][1];
+				}
+
+			}
+
+			//oberer Nachbarn?
+			k = H_suchen(a[0]+1, a[1]);
+			if(k > 0){
+				//TODO: Funktion
+				nachbar[0] = Element_liste[k][0];
+				nachbar[1] = Element_liste[k][0];
+
+				kacheln[k][0] =-1;
+				kacheln[k][1] =-1;
+
+				loesung[index_loesung+1][0] = a[0];
+				loesung[index_loesung+1][1] = a[1];
+				loesung[index_loesung+1][2] = nachbar[0];
+				loesung[index_loesung+1][3] = nachbar[1];
+
+				l = loesung_prim(kacheln, loesung, ++index_loesung);
+
+				if(l == 1) return 1;
+				else{
+					//teilloesung nicht valide => rollback
+					loesung[index_loesung+1][0] = -1;
+					loesung[index_loesung+1][1] = -1;
+					loesung[index_loesung+1][2] = -1;
+					loesung[index_loesung+1][3] = -1;
+
+					kacheln[k][0] =Element_liste[k][0];
+					kacheln[k][1] =Element_liste[k][1];
+				}
+
+			}
+
+			//unterer Nachbarn?
+			k = H_suchen(a[0]-1, a[1]);
+			if(k > 0){
+				//TODO: Funktion
+				nachbar[0] = Element_liste[k][0];
+				nachbar[1] = Element_liste[k][0];
+
+				kacheln[k][0] =-1;
+				kacheln[k][1] =-1;
+
+				loesung[index_loesung+1][0] = a[0];
+				loesung[index_loesung+1][1] = a[1];
+				loesung[index_loesung+1][2] = nachbar[0];
+				loesung[index_loesung+1][3] = nachbar[1];
+
+				l = loesung_prim(kacheln, loesung, ++index_loesung);
+
+				if(l == 1) return 1;
+				else{
+					//teilloesung nicht valide => rollback
+					loesung[index_loesung+1][0] = -1;
+					loesung[index_loesung+1][1] = -1;
+					loesung[index_loesung+1][2] = -1;
+					loesung[index_loesung+1][3] = -1;
+
+					kacheln[k][0] =Element_liste[k][0];
+					kacheln[k][1] =Element_liste[k][1];
+				}
+			}
+
+			return 0;
+
+}
+
 
 int main(void) {
-	setbuf(stdout, NULL); //Printout bug lösen
+	//setbuf(stdout, NULL); //Printout bug lösen
+
+
+	printf("%s\n","Hello");
+
+
 	init();
 	H_init();
 
 	//funktionstestH();exit(0);
-
-
-
 
 
 	einlesen(); //Dauert bei ex4 schon 60s
@@ -675,12 +791,11 @@ int main(void) {
 	//test();
 
 printf("eingelesen ... !");
-	transformation();
 
-printf("transformiert ... !");
+//printf("transformiert ... !");
 
 	H_hashtabelle_erstellen();
-printf("hs angefertigt ... !");
+//printf("hs angefertigt ... !");
 
 
 	//sort();
@@ -697,16 +812,33 @@ printf("hs angefertigt ... !");
 
 
 
+
 	/*
 	int index =0;
-	while(R_anz[index] != 0){
-			if(R_anz[index]%2==1){
+	while(R__El_anz[index] != 0){
+			if(R__El_anz[index]%2==1){
 				printf("In einem der Rauume ist die Anzahl der Plätze ungerade => unlösbar!");
 				exit(0);
 			}
 			++index;
 	}
 	*/
+
+	unsigned int Element_listeR[999983][2];
+	for(int i=0; i<999983; i++){
+		Element_listeR[i][0] = Hash_liste[i][0];
+		Element_listeR[i][1] = Hash_liste[i][1];
+	}
+
+	unsigned int Loesung_R[500000][4];
+	for(int i=0; i<500000; i++){
+		Loesung_R[i][0] = -1;
+		Loesung_R[i][1] = -1;
+	}
+
+
+	loesung_prim(Element_listeR,Loesung_R,0);
+
 
 
 
