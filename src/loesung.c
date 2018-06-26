@@ -771,10 +771,74 @@ int validate(){
 	return 1;
 }
 
+int validate2(){
+	int drin = 0;
+	for(int i=0; i<500000; i++){
+		if(Loesung_R[i][0] != -1 &&	Loesung_R[i][1] != -1){
+			drin = 0;
+			for(int k=0; k<500000; k++){
+				if(Loesung_R[i][0] == Element_liste[k][0] &&	Loesung_R[i][1] == Element_liste[k][1]){
+					drin = 1; break;
+				}
+				if(Loesung_R[i][2] == Element_liste[k][0] &&	Loesung_R[i][3] == Element_liste[k][1]){
+					drin = 1; break;
+				}
+			}
+			if(drin == 0)printf("(%d,%d) nicht in ElementDat\n",Loesung_R[i][0], Loesung_R[i][1]);
+		}
+	}
+	return 1;
+}
+
+int validate_raeume(){
+	//ist jedes Element aus Raemen in Element
+	int anzraumkacheln = 0;
+	int raum = 0;
+	while(R__El_anz[raum] != 0){
+		for(int i=0; i<R__El_anz[raum]; i++){
+			if(Raeume[raum][i][0] != -1 && Raeume[raum][i][0] != -1){
+				int k;
+				for(k=0; k<anzKacheln; k++){
+					if(Raeume[raum][i][0] == Element_liste[k][0] &&	Raeume[raum][i][1] == Element_liste[k][1]){
+						++anzraumkacheln;
+						break;
+					}
+				}
+				if(k == anzKacheln)printf("(%d,%d) (%d)aus Raum %d nicht in Element\n",Raeume[raum][i][0], Raeume[raum][i][1],k,raum);
+			}
+		}
+		++raum;
+	}
+	printf("%d / %d in raeumen verteilt!\n",anzraumkacheln,anzKacheln);
+
+	int k;
+	for(k=0; k<anzKacheln; k++){
+		if(Element_liste[k][0] != -1 && Element_liste[k][0] != -1){
+			while(R__El_anz[raum] != 0){
+					int i;
+					for(i=0; i<R__El_anz[raum]; i++){
+							if(Raeume[raum][i][0] == Element_liste[k][0] &&	Raeume[raum][i][0] == Element_liste[k][1]){
+								++anzraumkacheln;
+								break;
+							}
+					}
+					if(i == anzKacheln)printf("(%d,%d) (%d)aus Element %d nicht in Raum\n",Element_liste[k][0], Element_liste[k][1],k,raum);
+			}
+			++raum;
+		}
+	}
+	printf("%d / %d in raeumen verteilt!\n",anzraumkacheln,anzKacheln);
+
+
+	return 1;
+}
+
 int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, int index_loesung){
 	if(index_loesung_raum== R__El_anz[raum]/2){
 		printf("loesung errechnet, %d\n", index_loesung);
-
+		for(int i=0; i<index_loesung_raum;i++){
+			printf("%u %u;%u %u\n", Loesung_R[i][0],Loesung_R[i][1],Loesung_R[i][2],Loesung_R[i][3]);
+		}
 		return 1;
 
 	} //gueltige loesung
@@ -803,7 +867,7 @@ int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, in
 		//1. nehme erste verbleibende in Element_liste
 		int i;
 			for(i=0; i<R__El_anz[0]; i++){
-				if(Raeume[raum][i][0] ==-1 && Raeume[raum][i][1] == -1)continue;
+				//if(Raeume[raum][i][0] ==-1 && Raeume[raum][i][1] == -1)continue;
 				//printf("%u,%u (gruppiert:%d)\n", Raeume[0][i][0], Raeume[0][i][1],index_loesung);
 
 				//pruefe ob kachel aus Element_liste schon in loesung
@@ -811,8 +875,9 @@ int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, in
 				if(geloest == -1){
 					a[0] = Raeume[raum][i][0];
 					a[1] = Raeume[raum][i][1];
-					Raeume[raum][i][0] = -1;
-					Raeume[raum][i][1] = -1;
+					// Raeume[raum][i][0] = -1;
+					// Raeume[raum][i][1] = -1;
+
 					break;
 				}
 			}
@@ -820,7 +885,7 @@ int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, in
 		//2. suche Nachbarn
 			//rechter Nachbarn?
 			suche = H_suchen(a[0], a[1]+1);
-			if(suche > 0){
+			if(suche != -1){
 
 								//TODO: Funktion
 								//pruefe ob kachel aus Element_liste schon in loesung
@@ -871,7 +936,7 @@ int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, in
 
 			//linker Nachbarn?
 			suche = H_suchen(a[0], a[1]-1);
-			if(suche > 0){
+			if(suche != -1){
 
 								//TODO: Funktion
 								//pruefe ob kachel aus Element_liste schon in loesung
@@ -920,7 +985,7 @@ int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, in
 
 			//oberer Nachbarn?
 			suche = H_suchen(a[0]+1, a[1]);
-			if(suche > 0){
+			if(suche != -1){
 
 								//TODO: Funktion
 								//pruefe ob kachel aus Element_liste schon in loesung
@@ -969,7 +1034,7 @@ int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, in
 
 			//unterer Nachbarn?
 			suche = H_suchen(a[0]-1, a[1]);
-			if(suche > 0){
+			if(suche != -1){
 
 				//TODO: Funktion
 				//pruefe ob kachel aus Element_liste schon in loesung
@@ -1039,7 +1104,7 @@ int main(void) {
 	//printf("eingelesen ... !");
 
 //printf("transformiert ... !");
-	//printlist();
+	printlist();
 
 
 	H_hashtabelle_erstellen();
@@ -1053,7 +1118,10 @@ printf("hs angefertigt ... !");
 	raeume_linearH();
 	//raeume_prim();
 
+	validate_raeume();
 	printraeume();
+
+	exit(0);
 
 
 	/*
@@ -1090,6 +1158,7 @@ printf("hs angefertigt ... !");
 
 	printf("validate =%d\n",validate());
 	printf("anzKacheln: %d\n",anzKacheln );
+	validate2();
 
 	exit(0);
 	//funktionstest1();
