@@ -52,6 +52,7 @@ char strategie = 'b'; //s=sortieren, h=hashing, b=beides
 	size_t liste_size = 10000;
 
 	void transformation();
+	int loesungsschritt(int raum, unsigned int loesung[][4], int index_loesung_raum, int index_loesung, int x, int y, int i);
 
 
 int H_HP_berechnen(unsigned int x,unsigned int y){
@@ -84,7 +85,7 @@ void H_init(){
 void H_gruppieren(unsigned int x,unsigned int y){
 	//printf("		grupiere: (%d,%d)\n:",x,y);
 	if(H_gruppiert == H_P){
-		printf("Hashtabelle voll!");
+		printf("Hashtabelle gruppieren voll!");
 		exit(-1);
 	}
 	unsigned int k = H_HP_berechnen(x,y);
@@ -95,7 +96,7 @@ void H_gruppieren(unsigned int x,unsigned int y){
 	}
 	else {
 		//inplace hashing
-		unsigned int next=2;
+		unsigned int next=1;
 		while(!(Hash_gruppiert[H_next_berechnen(k,next)][0] == 0 && Hash_gruppiert[H_next_berechnen(k,next)][1] == 0)){
 			printf("						Hashing Kollision: (%d,%d)(%d,%d)\n", x,y,Hash_gruppiert[k*next*next % H_P][0],Hash_gruppiert[k*next*next % H_P][1]);
 			printf("						Hashing Kollision Data: (%d,%d)\n", k,next);
@@ -114,7 +115,7 @@ void H_gruppieren(unsigned int x,unsigned int y){
 void H_loesen(unsigned int x, unsigned int y){
 //	printf("		H_loesen eintragen: (%u,%u)\n:",x,y);
 	if(H_geloest == H_P){
-		printf("Hashtabelle voll!");
+		printf("Hashtabelle loesen voll!");
 		exit(-1);
 	}
 	unsigned int k =H_HP_berechnen(x,y);
@@ -126,10 +127,10 @@ void H_loesen(unsigned int x, unsigned int y){
 	}
 	else {
 		//inplace hashing
-		unsigned int next=2;
+		unsigned int next=1;
 		printf("Hashing Try %u: (%u,%u)\n",next,x,y );
 		while(!(Hash_geloest[H_next_berechnen(k,next)][0] == 0 && Hash_geloest[H_next_berechnen(k,next)][1] == 0)){
-			printf("						Hashing Kollision: (%u,%u)(%u,%u)\n", x,y,Hash_geloest[k*next*next % H_P][0],Hash_geloest[k*next*next % H_P][1]);
+			printf("						Hashing Kollision: (%u,%u)(%u,%u)\n", x,y,Hash_geloest[k][0],Hash_geloest[k][1]);
 			printf("						Hashing Kollision Data: (%u,%u)\n", k,next);
 
 			if(next == H_P){ //problem: max. def. dichte erreicht => abbruch
@@ -147,8 +148,9 @@ void H_loesen(unsigned int x, unsigned int y){
 void H_loesen_loeschen(unsigned int x, unsigned int y){
 	//printf("				suche: (%d,%d)\n",x,y);
 	unsigned int k = H_HP_berechnen(x,y);
-	if(Hash_liste[k][0] == x && Hash_liste[k][1] == y){
-		Hash_liste[k][0] = 0; Hash_liste[k][1] = 0;
+	if(Hash_geloest[k][0] == x && Hash_geloest[k][1] == y){
+		Hash_geloest[k][0] = 0; Hash_geloest[k][1] = 0;
+		--H_geloest;
 	}
 	else {
 		//inplace hashing
@@ -156,19 +158,20 @@ void H_loesen_loeschen(unsigned int x, unsigned int y){
 		while(!(Hash_geloest[H_next_berechnen(k,next)][0] != x && Hash_geloest[H_next_berechnen(k,next)][1] != y)){
 			printf("						Hashing Kollision: (%u,%u)(%u,%u)\n", x,y,Hash_geloest[k*next*next % H_P][0],Hash_geloest[k*next*next % H_P][1]);
 			printf("						Hashing Kollision Data: (%u,%u)\n", k,next);
-			if(next == maxNEXT){ //problem: max. def. dichte erreicht => abbruch
+			if(next == maxNEXT_geloest){ //problem: max. def. dichte erreicht => abbruch
 				printf("H_loesen_loeschen Fehler => ELement (%d,%d) verschwunden",x,y);
 				exit(-1);
 			}
 			++next;
 		}
 		Hash_geloest[k][0] = 0; Hash_geloest[k][1] = 0;
+		--H_geloest;
 	}
 }
 
 void H_eintragen(unsigned int x, unsigned int y){
 	if(H_belegt == H_P){
-		printf("Hashtabelle voll!");
+		printf("Hashtabelle Liste voll!");
 		exit(-1);
 	}
 	unsigned int k = H_HP_berechnen(x,y);
@@ -184,7 +187,7 @@ void H_eintragen(unsigned int x, unsigned int y){
 		//printf("HS eintragen V2: (%u,%u) wegen (%u,%u)\n", x,y,Hash_liste[k][0],Hash_liste[k][1]);
 
 		//inplace hashing
-		unsigned int next=2;
+		unsigned int next=1;
 		while(!(Hash_liste[H_next_berechnen(k,next)][0] == 0 && Hash_liste[H_next_berechnen(k,next)][1] == 0)){
 			printf("						Hashing Kollision: (%u,%u)(%u,%u)\n", x,y,Hash_liste[k*next*next % H_P][0],Hash_liste[k*next*next % H_P][1]);
 			printf("						Hashing Kollision Data: (%u,%u)\n", k,next);
@@ -224,7 +227,6 @@ int H_suchen(unsigned int x, unsigned int y){
 			}
 			++next;
 		}
-		return k;
 	}
 }
 
@@ -246,7 +248,6 @@ int H_abfrage_gruppiert(unsigned int x, unsigned int y){
 			}
 			++next;
 		}
-		return k;
 	}
 }
 
@@ -268,7 +269,6 @@ int H_abfrage_geloest(unsigned int x, unsigned int y){
 			}
 			++next;
 		}
-		return k;
 	}
 }
 
@@ -838,7 +838,7 @@ int validate_raeume(){
 }
 
 
-int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, int index_loesung, int sprung){
+int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, int index_loesung){
 	//printf("raum: %d, %d/ %d  Elemente geloest \n",raum,index_loesung,R__El_anz[raum]/2);
 	if(index_loesung== R__El_anz[raum]/2){
 		printf("loesung errechnet, %d\n", index_loesung);
@@ -869,12 +869,8 @@ int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, in
 
  	*/
 
-		int a[2];
-		int nachbar[2];
 		int suche=0;
-		int geloest=0;
 
-		int l=0;
 
 		//1. nehme erste verbleibende in Element_liste
 		int i;
@@ -897,17 +893,16 @@ int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, in
 					// }
 
 					if(index_loesung == 0){
-						printf("\nstarte bei: %d\n\n",i);
+						printf("\nraum %d, starte bei: %d\n",raum,i);
 						//Hash_geloest
-						int hashplaetze=0;
 						for(int i=0; i<999983; i++){
 							Hash_geloest[i][0] = 0; Hash_geloest[i][1] = 0;
 							//if(Hash_geloest[i][0] != 0 || Hash_geloest[i][1] != 0)++hashplaetze;
 						}
-						printf("hashbelegungen %d\n",hashplaetze);
+						printf("hashbelegungen %d\n\n",maxNEXT_geloest);
 					}
 
-
+					int geloest;
 					geloest = H_abfrage_geloest(Raeume[raum][i][0], Raeume[raum][i][1]);
 					if(geloest != -1){
 						continue;
@@ -916,9 +911,9 @@ int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, in
 
 
 
+
 					if(raum == 2)	printf("waehle: (%u,%u) (gruppiert:%d)\n", Raeume[raum][i][0], Raeume[raum][i][1],index_loesung);
-					a[0] = Raeume[raum][i][0];
-					a[1] = Raeume[raum][i][1];
+
 					// Raeume[raum][i][0] = -1;
 					// Raeume[raum][i][1] = -1;
 
@@ -926,180 +921,78 @@ int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, in
 
 		//2. suche Nachbarn
 			//rechter Nachbarn?
-			suche = H_suchen(a[0], a[1]+1);
+			suche = H_suchen(Raeume[raum][i][0], Raeume[raum][i][1]+1);
 			if(suche != -1){
-
-								//TODO: Funktion
-								//pruefe ob kachel aus Element_liste schon in loesung
-								geloest = H_abfrage_geloest(Hash_liste[suche][0],Hash_liste[suche][1]);
-								if(geloest == -1){
-								if(raum == 2)printf("R		Nachbarn: (%u,%u) (%u,%u) (gruppiert: %d)\n",a[0],a[1],Hash_liste[suche][0],Hash_liste[suche][1],index_loesung);
-
-									H_loesen(a[0],a[1]);
-									H_loesen(Hash_liste[suche][0],Hash_liste[suche][1]); //TODO: mgl. Raeume[?][i][0,1] herrausfinden
-
-									nachbar[0] = 	Hash_liste[suche][0];
-									nachbar[1] =  Hash_liste[suche][1];
-
-									loesung[index_loesung][0] = a[0];
-									loesung[index_loesung][1] = a[1];
-									loesung[index_loesung][2] = nachbar[0];
-									loesung[index_loesung][3] = nachbar[1];
-
-									++index_loesung;
-									++index_loesung_raum;
-
-									l = loesung_prim(raum, loesung, index_loesung_raum,index_loesung,sprung);
-
-									if(l == 1) return 1;
-									else{
-										H_loesen_loeschen(a[0],a[1]);
-										H_loesen_loeschen(nachbar[0],nachbar[1]);
-										//teilloesung nicht valide => rollback
-										loesung[index_loesung][0] = 0;
-										loesung[index_loesung][1] = 0;
-										loesung[index_loesung][2] = 0;
-										loesung[index_loesung][3] = 0;
-
-										--index_loesung;
-										--index_loesung_raum;
-									}
-								}
+					int ret = loesungsschritt(raum, loesung,index_loesung_raum, index_loesung, 0 , 1,i);
+					if(ret == 1) return 1;
 			}
 
-
-
 			//linker Nachbarn?
-			suche = H_suchen(a[0], a[1]-1);
+			suche = H_suchen(Raeume[raum][i][0], Raeume[raum][i][1]+1);
 			if(suche != -1){
-
-								//TODO: Funktion
-								//pruefe ob kachel aus Element_liste schon in loesung
-								geloest = H_abfrage_geloest(Hash_liste[suche][0],Hash_liste[suche][1]);
-								if(geloest == -1){
-								if(raum == 2)printf("L		Nachbarn: (%u,%u) (%u,%u) (gruppiert: %d)\n",a[0],a[1],Hash_liste[suche][0],Hash_liste[suche][1],index_loesung);
-
-									H_loesen(a[0],a[1]);
-									H_loesen(Hash_liste[suche][0],Hash_liste[suche][1]); //TODO: mgl. Raeume[?][i][0,1] herrausfinden
-
-									nachbar[0] = 	Hash_liste[suche][0];
-									nachbar[1] =  Hash_liste[suche][1];
-
-									loesung[index_loesung][0] = a[0];
-									loesung[index_loesung][1] = a[1];
-									loesung[index_loesung][2] = nachbar[0];
-									loesung[index_loesung][3] = nachbar[1];
-
-									++index_loesung;
-									++index_loesung_raum;
-
-									l = loesung_prim(raum, loesung,index_loesung_raum, index_loesung,sprung);
-
-									if(l == 1) return 1;
-									else{
-										H_loesen_loeschen(a[0],a[1]);
-										H_loesen_loeschen(nachbar[0],nachbar[1]);
-										//teilloesung nicht valide => rollback
-										loesung[index_loesung][0] = 0;
-										loesung[index_loesung][1] = 0;
-										loesung[index_loesung][2] = 0;
-										loesung[index_loesung][3] = 0;
-
-										--index_loesung;
-										--index_loesung_raum;
-									}
-								}
+					int ret = loesungsschritt(raum, loesung,index_loesung_raum, index_loesung, 0 , -1,i);
+					if(ret == 1) return 1;
 			}
 
 			//oberer Nachbarn?
-			suche = H_suchen(a[0]+1, a[1]);
+			suche = H_suchen(Raeume[raum][i][0], Raeume[raum][i][1]+1);
 			if(suche != -1){
-
-								//TODO: Funktion
-								//pruefe ob kachel aus Element_liste schon in loesung
-								geloest = H_abfrage_geloest(Hash_liste[suche][0],Hash_liste[suche][1]);
-								if(geloest == -1){
-									if(raum == 2)printf("O		Nachbarn: (%u,%u) (%u,%u) (gruppiert: %d)\n",a[0],a[1],Hash_liste[suche][0],Hash_liste[suche][1],index_loesung);
-
-									H_loesen(a[0],a[1]);
-									H_loesen(Hash_liste[suche][0],Hash_liste[suche][1]); //TODO: mgl. Raeume[?][i][0,1] herrausfinden
-
-									nachbar[0] = 	Hash_liste[suche][0];
-									nachbar[1] =  Hash_liste[suche][1];
-
-									loesung[index_loesung][0] = a[0];
-									loesung[index_loesung][1] = a[1];
-									loesung[index_loesung][2] = nachbar[0];
-									loesung[index_loesung][3] = nachbar[1];
-
-									++index_loesung;
-									++index_loesung_raum;
-
-									l = loesung_prim(raum, loesung, index_loesung_raum,index_loesung,sprung);
-
-									if(l == 1) return 1;
-									else{
-										H_loesen_loeschen(a[0],a[1]);
-										H_loesen_loeschen(nachbar[0],nachbar[1]);
-										//teilloesung nicht valide => rollback
-										loesung[index_loesung][0] = 0;
-										loesung[index_loesung][1] = 0;
-										loesung[index_loesung][2] = 0;
-										loesung[index_loesung][3] = 0;
-
-										--index_loesung;
-										--index_loesung_raum;
-									}
-								}
+				int ret = loesungsschritt(raum, loesung,index_loesung_raum, index_loesung, 1, 0,i);
+				if(ret == 1) return 1;
 			}
 
 			//unterer Nachbarn?
-			suche = H_suchen(a[0]-1, a[1]);
+			suche = H_suchen(Raeume[raum][i][0], Raeume[raum][i][1]+1);
 			if(suche != -1){
-
-									//TODO: Funktion
-									//pruefe ob kachel aus Element_liste schon in loesung
-									geloest = H_abfrage_geloest(Hash_liste[suche][0],Hash_liste[suche][1]);
-									if(geloest == -1){
-									if(raum == 2)printf("U		Nachbarn: (%u,%u) (%u,%u) (gruppiert: %d)\n",a[0],a[1],Hash_liste[suche][0],Hash_liste[suche][1],index_loesung);
-
-										H_loesen(a[0],a[1]);
-										H_loesen(Hash_liste[suche][0],Hash_liste[suche][1]); //TODO: mgl. Raeume[?][i][0,1] herrausfinden
-
-										nachbar[0] = 	Hash_liste[suche][0];
-										nachbar[1] =  Hash_liste[suche][1];
-
-										loesung[index_loesung][0] = a[0];
-										loesung[index_loesung][1] = a[1];
-										loesung[index_loesung][2] = nachbar[0];
-										loesung[index_loesung][3] = nachbar[1];
-
-										++index_loesung;
-										++index_loesung_raum;
-
-										l = loesung_prim(raum, loesung, index_loesung_raum,index_loesung,sprung);
-
-										if(l == 1) return 1;
-										else{
-											H_loesen_loeschen(a[0],a[1]);
-											H_loesen_loeschen(nachbar[0],nachbar[1]);
-											//teilloesung nicht valide => rollback
-											loesung[index_loesung][0] = 0;
-											loesung[index_loesung][1] = 0;
-											loesung[index_loesung][2] = 0;
-											loesung[index_loesung][3] = 0;
-
-											--index_loesung;
-											--index_loesung_raum;
-										}
-									}
+				int ret = loesungsschritt(raum, loesung,index_loesung_raum, index_loesung, -1 , 0,i);
+				if(ret == 1) return 1;
 			}
-			if(raum == 2)printf("keinen nachbar fuer (%u,%u) (gruppiert: %d)\n", a[0],a[1],index_loesung);
-			++i;
+			if(raum == 2)printf("keinen nachbar fuer (%u,%u) (gruppiert: %d)\n", Raeume[raum][i][0], Raeume[raum][i][1],index_loesung);
 		}
 		// if(sprung == anzKacheln-1)return 2;
 		return 2;
 }
+
+int loesungsschritt(int raum, unsigned int loesung[][4], int index_loesung_raum, int index_loesung, int x, int y, int i){
+	//if(raum == 2 && i > 0)printf("R		Nachbarn: (%u,%u) (%u,%u) (gruppiert: %d)\n",a[0],a[1],Hash_liste[suche][0],Hash_liste[suche][1],index_loesung);
+
+				//TODO: Funktion
+				//pruefe ob kachel aus Element_liste schon in loesung
+				int geloest = H_abfrage_geloest(Raeume[raum][i][0]+x, Raeume[raum][i][1]+y);
+				if(geloest == -1){
+				//if(raum == 2)printf("R		neue Nachbarn: (%u,%u) (%u,%u) (gruppiert: %d)\n",a[0],a[1],Hash_liste[suche][0],Hash_liste[suche][1],index_loesung);
+
+					H_loesen(Raeume[raum][i][0], Raeume[raum][i][1]);
+					H_loesen(Raeume[raum][i][0], Raeume[raum][i][1]+1); //TODO: mgl. Raeume[?][i][0,1] herrausfinden
+
+
+					loesung[index_loesung][0] = Raeume[raum][i][0];
+					loesung[index_loesung][1] = Raeume[raum][i][1];
+					loesung[index_loesung][2] = Raeume[raum][i][0];
+					loesung[index_loesung][3] = Raeume[raum][i][1]+1;
+
+					++index_loesung;
+					++index_loesung_raum;
+
+					int l = loesung_prim(raum, loesung, index_loesung_raum,index_loesung);
+
+					if(l == 1) return 1;
+					else{
+						H_loesen_loeschen(Raeume[raum][i][0], Raeume[raum][i][1]);
+						H_loesen_loeschen(Raeume[raum][i][0], Raeume[raum][i][1]+1);
+						//teilloesung nicht valide => rollback
+						loesung[index_loesung][0] = 0;
+						loesung[index_loesung][1] = 0;
+						loesung[index_loesung][2] = 0;
+						loesung[index_loesung][3] = 0;
+
+						--index_loesung;
+						--index_loesung_raum;
+					}
+				}
+				return 2;
+}
+
 
 // void loesung_ober(int raum, unsigned int loesung[][4], int index_loesung_raum, int index_loesung){
 // 	int sprung = 0;
@@ -1174,7 +1067,7 @@ int main(void) {
 			Loesung_R[i][3] = 0;
 		}
 		printf("loese raum %d\n", raum);
-		loesung_prim(raum, Loesung_R, 0,index_loesung,0);
+		loesung_prim(raum, Loesung_R, 0,index_loesung);
 		//loesung_ober(raum, Loesung_R, 0,index_loesung);
 	}
 
