@@ -41,7 +41,7 @@ char strategie = 'b'; //s=sortieren, h=hashing, b=beides
 
 
 //Adjazensliste + sort
-	unsigned int Element_liste[100000][2]; int EL_anz;
+	unsigned int Element_liste[999983][2]; int EL_anz;
 	unsigned int Loesung_liste[999983][4]; unsigned int loesungsindex = 0;
 	unsigned int Raeume[100][100000][2]; int R__El_anz[100];
 	unsigned int Loesung_Raeume[100][100000][4]; int R__El_anz[100];
@@ -765,32 +765,96 @@ void greedy(){
 }
 
 int validate(){
+	int sum_l=0;
 	for(int i=0; i<loesungsindex; i++){
 		if(Loesung_liste[i][0] == 0 &&	Loesung_liste[i][1] == 0 && Loesung_liste[i][2] == 0 &&	Loesung_liste[i][3] == 0)break;
+		sum_l+=Loesung_liste[i][0]+Loesung_liste[i][1]+Loesung_liste[i][2] +Loesung_liste[i][3];
 		if(abs(Loesung_liste[i][0] - Loesung_liste[i][2])  +	abs(Loesung_liste[i][1] -	Loesung_liste[i][3]) != 1){
 			printf("FALSCH: %d %d;%d %d\n", Loesung_liste[i][0],Loesung_liste[i][1],Loesung_liste[i][2],Loesung_liste[i][3]);
 			return 0;
 		}
 	}
+	int sum_e=0;
+	for(int k=0; k<anzKacheln; k++){
+		sum_e += Element_liste[k][0]+Element_liste[k][1];
+	}
+	if(sum_e != sum_l)return 0;
 	return 1;
 }
 
 int validate2(){
 	int drin = 0;
-	for(int i=0; i<loesungsindex; i++){
-		if(Loesung_liste[i][0] != 0 &&	Loesung_liste[i][1] != 0){
+	int loesungsindex_ = 0;
+	for(int i=0; i<999983; i++){
+		if(Loesung_liste[i][0] == 0 &&	Loesung_liste[i][1] == 0 && Loesung_liste[i][2] == 0 &&	Loesung_liste[i][3] == 0)continue;
+		//printf("%u %u;%u %u\n", Loesung_liste[i][0],Loesung_liste[i][1],Loesung_liste[i][2],Loesung_liste[i][3]);
+			++loesungsindex_;
 			drin = 0;
 			for(int k=0; k<anzKacheln; k++){
-				if(Loesung_liste[i][0] == Element_liste[k][0] &&	Loesung_liste[i][1] == Element_liste[k][1]){
+				if(Loesung_liste[i][0] == Element_liste[k][0] && Loesung_liste[i][1] == Element_liste[k][1]){
 					drin = 1; break;
 				}
 				if(Loesung_liste[i][2] == Element_liste[k][0] &&	Loesung_liste[i][3] == Element_liste[k][1]){
 					drin = 1; break;
 				}
 			}
-			if(drin == 0)printf("(%d,%d) nicht in ElementDat\n",Loesung_R[i][0], Loesung_R[i][1]);
-		}
+			if(drin == 0)printf("(%u,%u) nicht in ElementDat\n",Loesung_R[i][0], Loesung_R[i][1]);
 	}
+
+	for(int k=0; k<anzKacheln;k++){
+		//printf("%d: elementcheck_loesung: (%d,%d)\n", k,Element_liste[k][0], Element_liste[k][1]);
+		drin = 0;
+		for(int i =0; i<999983; i++){
+			if(Loesung_liste[i][0] == 0 &&	Loesung_liste[i][1] == 0 && Loesung_liste[i][2] == 0 &&	Loesung_liste[i][3] == 0)continue;
+			//printf("%u %u;%u %u\n", Loesung_liste[i][0],Loesung_liste[i][1],Loesung_liste[i][2],Loesung_liste[i][3]);
+				//++loesungsindex_;
+					if(Loesung_liste[i][0] == Element_liste[k][0] && Loesung_liste[i][1] == Element_liste[k][1]){
+						drin = 1; break;
+					}
+					if(Loesung_liste[i][2] == Element_liste[k][0] && Loesung_liste[i][3] == Element_liste[k][1]){
+						drin = 1; break;
+					}
+		}
+		if(drin == 0)printf("(%u,%u) nicht in Loesung!\n",Element_liste[k][0],Element_liste[k][1]);
+	}
+
+	int dopplungen =0;
+	for(int i=0; i<999983; i++){
+		if(Loesung_liste[i][0] == 0 &&	Loesung_liste[i][1] == 0 && Loesung_liste[i][2] == 0 &&	Loesung_liste[i][3] == 0)continue;
+		for(int j=i+1; j<999983; j++){
+			if(Loesung_liste[j][0] == 0 &&	Loesung_liste[j][1] == 0 && Loesung_liste[j][2] == 0 &&	Loesung_liste[j][3] == 0)continue;
+
+			if(Loesung_liste[i][0] == Loesung_liste[j][0] &&	Loesung_liste[i][1] == Loesung_liste[j][1]){
+			  printf("1 (%u,%u) doppelt in Loesung!\n",Loesung_liste[j][0],Loesung_liste[j][1]);
+				++dopplungen;
+				Loesung_liste[i][0] = Loesung_liste[j][0] = Loesung_liste[i][1] = Loesung_liste[j][1] = 0;
+				continue;
+			}
+			if(Loesung_liste[i][0] == Loesung_liste[j][2] &&	Loesung_liste[i][1] == Loesung_liste[j][3]){
+				printf("2 (%u,%u) doppelt in Loesung!\n",Loesung_liste[j][2],Loesung_liste[j][3]);
+				++dopplungen;
+				Loesung_liste[i][0] = Loesung_liste[j][2] = Loesung_liste[i][1] = Loesung_liste[j][3] = 0;
+				continue;
+			}
+			if(Loesung_liste[i][2] == Loesung_liste[j][0] &&	Loesung_liste[i][3] == Loesung_liste[j][1]){
+				printf("3 (%u,%u) doppelt in Loesung!\n",Loesung_liste[j][0],Loesung_liste[j][1]);
+				++dopplungen;
+				Loesung_liste[i][2] = Loesung_liste[j][0] =	Loesung_liste[i][3] = Loesung_liste[j][1] = 0;
+				continue;
+			}
+			if(Loesung_liste[i][2] == Loesung_liste[j][2] &&	Loesung_liste[i][3] == Loesung_liste[j][3]){
+				printf("4 (%u,%u) doppelt in Loesung!\n",Loesung_liste[j][0],Loesung_liste[j][1]);
+				++dopplungen;
+				Loesung_liste[i][2] = Loesung_liste[j][2] = Loesung_liste[i][3] = Loesung_liste[j][3] = 0;
+				continue;
+			}
+			//i0 i1 i2 i3
+			//j0 j1 j2 j3
+		}
+
+	}
+
+
 	return 1;
 }
 
@@ -839,7 +903,8 @@ int validate_raeume(){
 
 
 int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, int index_loesung){
-	//printf("raum: %d, %d/ %d  Elemente geloest \n",raum,index_loesung,R__El_anz[raum]/2);
+	printf("raum: %d, %d/ %d  Elemente geloest \n",raum,index_loesung,R__El_anz[raum]/2);
+	//gueltige loesung: basisfall
 	if(index_loesung== R__El_anz[raum]/2){
 		printf("loesung errechnet, %d\n", index_loesung);
 		for(int i=0; i<index_loesung;i++){
@@ -852,46 +917,16 @@ int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, in
 			//loesung[]
 		}
 		return 1;
-
-	} //gueltige loesung
-
-	/*
-	1. wiederhole, solange es noch neue Teil-Lösungsschritte gibt:
-	     a) wähle einen neuen Teil-Lösungsschritt;
-	     b) falls Wahl gültig ist:
-	               I) erweitere Vektor um Wahl;
-	              II) falls Vektor vollständig ist, return true; // Lösung gefunden!
-	                  sonst:
-	                       falls (FindeLoesung(Stufe+1, Vektor)) return true; // Lösung!
-	                       sonst mache Wahl rückgängig; // Sackgasse (Backtracking)!
-	  2. Da es keinen neuen Teil-Lösungsschritt gibt: return false // Keine Lösung!
-
-
- 	*/
+	}
 
 		int suche=0;
 
 
-		//1. nehme erste verbleibende in Element_liste
 		int i;
-
-
 		for(i=0; i<R__El_anz[raum]; i++){
-
-				//if(Raeume[raum][i][0] ==-1 && Raeume[raum][i][1] == -1)continue;
-
-				//pruefe ob kachel aus Element_liste schon in loesung
-
-					// if(i==0 && index_loesung == 0){
-					// 	printf("springe nach %d ...\n",sprung);
-					// 	printf("anzahl loesungen: %d\n",index_loesung);
-					// 	i+=sprung;
-					// 	sprung = 0;
-					// }
-					// else{
-					//
-					// }
-
+						//if(Raeume[raum][i][0] ==-1 && Raeume[raum][i][1] == -1)continue;
+		//1. nehme erste verbleibende in Element_liste
+					//pruefe ob kachel aus Element_liste schon in loesung
 					if(index_loesung == 0){
 						printf("\nraum %d, starte bei: %d\n",raum,i);
 						//Hash_geloest
@@ -907,48 +942,44 @@ int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, in
 					if(geloest != -1){
 						continue;
 					}
-
-
-
-
-
-					if(raum == 2)	printf("waehle: (%u,%u) (gruppiert:%d)\n", Raeume[raum][i][0], Raeume[raum][i][1],index_loesung);
+					printf("waehle: (%u,%u) (gruppiert:%d)\n", Raeume[raum][i][0], Raeume[raum][i][1],index_loesung);
 
 					// Raeume[raum][i][0] = -1;
 					// Raeume[raum][i][1] = -1;
 
 
 
-		//2. suche Nachbarn
-			//rechter Nachbarn?
-			suche = H_suchen(Raeume[raum][i][0], Raeume[raum][i][1]+1);
-			if(suche != -1){
-					int ret = loesungsschritt(raum, loesung,index_loesung_raum, index_loesung, 0 , 1,i);
-					if(ret == 1) return 1;
-			}
+	 //2. suche Nachbarn
+					//oberer Nachbarn?
+					suche = H_suchen(Raeume[raum][i][0], Raeume[raum][i][1]+1);
+					if(suche != -1){
+							int ret = loesungsschritt(raum, loesung,index_loesung_raum, index_loesung, 0 , 1,i);
+							if(ret == 1) return 1;
+					}
 
-			//linker Nachbarn?
-			suche = H_suchen(Raeume[raum][i][0], Raeume[raum][i][1]+1);
-			if(suche != -1){
-					int ret = loesungsschritt(raum, loesung,index_loesung_raum, index_loesung, 0 , -1,i);
-					if(ret == 1) return 1;
-			}
+					//unterer Nachbarn?
+					suche = H_suchen(Raeume[raum][i][0], Raeume[raum][i][1]-1);
+					if(suche != -1){
+							int ret = loesungsschritt(raum, loesung,index_loesung_raum, index_loesung, 0 , -1,i);
+							if(ret == 1) return 1;
+					}
 
-			//oberer Nachbarn?
-			suche = H_suchen(Raeume[raum][i][0], Raeume[raum][i][1]+1);
-			if(suche != -1){
-				int ret = loesungsschritt(raum, loesung,index_loesung_raum, index_loesung, 1, 0,i);
-				if(ret == 1) return 1;
-			}
+					//rechter Nachbarn?
+					suche = H_suchen(Raeume[raum][i][0]+1, Raeume[raum][i][1]);
+					if(suche != -1){
+						int ret = loesungsschritt(raum, loesung,index_loesung_raum, index_loesung, 1, 0,i);
+						if(ret == 1) return 1;
+					}
 
-			//unterer Nachbarn?
-			suche = H_suchen(Raeume[raum][i][0], Raeume[raum][i][1]+1);
-			if(suche != -1){
-				int ret = loesungsschritt(raum, loesung,index_loesung_raum, index_loesung, -1 , 0,i);
-				if(ret == 1) return 1;
-			}
-			if(raum == 2)printf("keinen nachbar fuer (%u,%u) (gruppiert: %d)\n", Raeume[raum][i][0], Raeume[raum][i][1],index_loesung);
-		}
+					//linker Nachbarn?
+					suche = H_suchen(Raeume[raum][i][0]-1, Raeume[raum][i][1]);
+					if(suche != -1){
+						int ret = loesungsschritt(raum, loesung,index_loesung_raum, index_loesung, -1 , 0,i);
+						if(ret == 1) return 1;
+					}
+					printf("keinen nachbar fuer (%u,%u) (gruppiert: %d)\n", Raeume[raum][i][0], Raeume[raum][i][1],index_loesung);
+					if(index_loesung > 0)return 0;
+		}//Ende FOR Schleife
 		// if(sprung == anzKacheln-1)return 2;
 		return 2;
 }
@@ -960,16 +991,16 @@ int loesungsschritt(int raum, unsigned int loesung[][4], int index_loesung_raum,
 				//pruefe ob kachel aus Element_liste schon in loesung
 				int geloest = H_abfrage_geloest(Raeume[raum][i][0]+x, Raeume[raum][i][1]+y);
 				if(geloest == -1){
-				//if(raum == 2)printf("R		neue Nachbarn: (%u,%u) (%u,%u) (gruppiert: %d)\n",a[0],a[1],Hash_liste[suche][0],Hash_liste[suche][1],index_loesung);
+				 printf("%d%d		neue Nachbarn: (%u,%u) (%u,%u) (gruppiert: %d)\n",x,y, Raeume[raum][i][0], Raeume[raum][i][1], Raeume[raum][i][0]+x, Raeume[raum][i][1]+y,index_loesung);
 
 					H_loesen(Raeume[raum][i][0], Raeume[raum][i][1]);
-					H_loesen(Raeume[raum][i][0], Raeume[raum][i][1]+1); //TODO: mgl. Raeume[?][i][0,1] herrausfinden
+					H_loesen(Raeume[raum][i][0]+x, Raeume[raum][i][1]+y); //TODO: mgl. Raeume[?][i][0,1] herrausfinden
 
 
 					loesung[index_loesung][0] = Raeume[raum][i][0];
 					loesung[index_loesung][1] = Raeume[raum][i][1];
-					loesung[index_loesung][2] = Raeume[raum][i][0];
-					loesung[index_loesung][3] = Raeume[raum][i][1]+1;
+					loesung[index_loesung][2] = Raeume[raum][i][0]+x;
+					loesung[index_loesung][3] = Raeume[raum][i][1]+y;
 
 					++index_loesung;
 					++index_loesung_raum;
@@ -979,7 +1010,7 @@ int loesungsschritt(int raum, unsigned int loesung[][4], int index_loesung_raum,
 					if(l == 1) return 1;
 					else{
 						H_loesen_loeschen(Raeume[raum][i][0], Raeume[raum][i][1]);
-						H_loesen_loeschen(Raeume[raum][i][0], Raeume[raum][i][1]+1);
+						H_loesen_loeschen(Raeume[raum][i][0]+x, Raeume[raum][i][1]+y);
 						//teilloesung nicht valide => rollback
 						loesung[index_loesung][0] = 0;
 						loesung[index_loesung][1] = 0;
@@ -1044,6 +1075,7 @@ int main(void) {
 
 	validate_raeume();
 	printraeume();
+
 
 	/*
 	int index =0;
