@@ -886,19 +886,32 @@ int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, in
 
 				//pruefe ob kachel aus Element_liste schon in loesung
 
-					if(i==0 && index_loesung == 0){
-						printf("springe nach %d ...\n",sprung);
-						printf("anzahl loesungen: %d\n",index_loesung);
-						i+=sprung;
-						sprung = 0;
-					}
-					else{
-						geloest = H_abfrage_geloest(Raeume[raum][i][0], Raeume[raum][i][1]);
-						if(geloest != -1){
-							continue;
+					// if(i==0 && index_loesung == 0){
+					// 	printf("springe nach %d ...\n",sprung);
+					// 	printf("anzahl loesungen: %d\n",index_loesung);
+					// 	i+=sprung;
+					// 	sprung = 0;
+					// }
+					// else{
+					//
+					// }
+
+					if(index_loesung == 0){
+						printf("\nstarte bei: %d\n\n",i);
+						//Hash_geloest
+						int hashplaetze=0;
+						for(int i=0; i<999983; i++){
+							Hash_geloest[i][0] = 0; Hash_geloest[i][1] = 0;
+							//if(Hash_geloest[i][0] != 0 || Hash_geloest[i][1] != 0)++hashplaetze;
 						}
+						printf("hashbelegungen %d\n",hashplaetze);
 					}
 
+
+					geloest = H_abfrage_geloest(Raeume[raum][i][0], Raeume[raum][i][1]);
+					if(geloest != -1){
+						continue;
+					}
 
 
 
@@ -1088,22 +1101,22 @@ int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, in
 		return 2;
 }
 
-void loesung_ober(int raum, unsigned int loesung[][4], int index_loesung_raum, int index_loesung){
-	int sprung = 0;
-	while(1){
-		for(int i=0; i<500000; i++){
-			if(Hash_geloest[i][0] != 0 || Hash_geloest[i][1] != 0){
-				//printf("hash nicht leer (%d,%d)!!!\n", Hash_geloest[i][0], Hash_geloest[i][1]);
-				//exit(0);
-				Hash_geloest[i][0] = 0; Hash_geloest[i][1] = 0;
-			}
-		}
-		printf("\n\n\nEbene 0, Sprung: %d", sprung);
-		if(sprung == R__El_anz[raum]-1)break;
-		if(loesung_prim(raum, loesung, 0,index_loesung,sprung) == 1)break;
-		++sprung;
-	}
-}
+// void loesung_ober(int raum, unsigned int loesung[][4], int index_loesung_raum, int index_loesung){
+// 	int sprung = 0;
+// 	while(1){
+// 		for(int i=0; i<500000; i++){
+// 			if(Hash_geloest[i][0] != 0 || Hash_geloest[i][1] != 0){
+// 				//printf("hash nicht leer (%d,%d)!!!\n", Hash_geloest[i][0], Hash_geloest[i][1]);
+// 				//exit(0);
+// 				Hash_geloest[i][0] = 0; Hash_geloest[i][1] = 0;
+// 			}
+// 		}
+// 		printf("\n\n\nEbene 0, Sprung: %d", sprung);
+// 		if(sprung == R__El_anz[raum]-1)break;
+// 		if(loesung_prim(raum, loesung, 0,index_loesung,sprung) == 1)break;
+// 		++sprung;
+// 	}
+// }
 
 
 int main(void) {
@@ -1161,8 +1174,8 @@ int main(void) {
 			Loesung_R[i][3] = 0;
 		}
 		printf("loese raum %d\n", raum);
-		//loesung_prim(raum, Loesung_R, 0,index_loesung,0);
-		loesung_ober(raum, Loesung_R, 0,index_loesung);
+		loesung_prim(raum, Loesung_R, 0,index_loesung,0);
+		//loesung_ober(raum, Loesung_R, 0,index_loesung);
 	}
 
   printf("\n\nLoesung:\n");
