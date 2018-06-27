@@ -13,7 +13,8 @@
 #include <unistd.h>
 #include <string.h>
 
-char strategie = 'b'; //s=sortieren, h=hashing, b=beides
+#include <math.h>
+
 
 //TODO: (0,0) kann nicht gehashed werden! => work around
 
@@ -26,11 +27,11 @@ int Kollisionen= 0;
 	int H_geloest= 0;
 	int gruppiert = 0;
 
-	int H_P = 999983;
+	int H_P = 9999830;
 
-	unsigned int Hash_liste[999983][2]; //TODO: variabel machen (anzKacheln)
-	unsigned int Hash_gruppiert[999983][2];
-	unsigned int Hash_geloest[999983 ][2];
+	unsigned int Hash_liste[9999830][2]; //TODO: variabel machen (anzKacheln)
+	unsigned int Hash_gruppiert[9999830][2];
+	unsigned int Hash_geloest[9999830][2];
 	unsigned int maxNEXT_liste = 1;
 	unsigned int maxNEXT_gruppiert = 1;
 	unsigned int maxNEXT_geloest = 1;
@@ -45,7 +46,7 @@ int Kollisionen= 0;
 //Adjazensliste + sort
 	unsigned int Element_liste[999983][2]; int EL_anz;
 	unsigned int Loesung_liste[999983][4]; unsigned int loesungsindex = 0;
-	unsigned int Raeume[100][100000][2]; int R__El_anz[100];
+	unsigned int Raeume[1000][100000][2]; int R__El_anz[100];
 	unsigned int Loesung_Raeume[100][100000][4]; int R__El_anz[100];
 
 
@@ -65,19 +66,21 @@ int quersumme(int k){
 	}
 	return q;
 }
+
 unsigned int H_HP_berechnen(unsigned int x,unsigned int y){
 	//printf("HS berechnen: (%u,%u)\n", x,y);
-	int k =  (100*x + 10*y) % H_P;
-
-	//int k = ((x << 19) | (x << 7)) % H_P;
-	//int k = (((x+y)*(x+y+1)/2)+y)% H_P;
-
+	int k = 0;
+	k =  (1000*x + 10* y) % H_P;
+	//k += ((x << 19) | (y << 7)) % H_P;
+	k += ((int) sqrt(x*x+y*y)) % H_P;
+	//k = (((x+y)*(x+y+1)/2)+y)% H_P;
+	//k += ((x+1 * x)+(y+1 * y)) % H_P;
 	//k^=323522*(x*y);
 	return k;
 }
 
 unsigned int H_next_berechnen(unsigned int k, unsigned int next){
-	k =  (k+next) % H_P;
+	k =  (k*1000+next*10) % H_P;
 //	k^=323522*(x*y);
 	return k;
 }
@@ -103,20 +106,25 @@ void H_gruppieren(unsigned int x,unsigned int y){
 	if(Hash_gruppiert[k][0] == 0 && Hash_gruppiert[k][1] == 0){
 		Hash_gruppiert[k][0] = x; Hash_gruppiert[k][1] = y;
 		++H_gruppiert;
+		return;
 	}
 	else {
-		printf("Kollision loesen!\n");exit(0);
 		unsigned int next=1;
-		while(!(Hash_gruppiert[H_next_berechnen(k,next)][0] == 0 && Hash_gruppiert[H_next_berechnen(k,next)][1] == 0)){
+		while(1){
+			printf("%d Kollision (gruppiert) (%u,%u) an k=%d\n",next,x,y,k);
+			k = H_next_berechnen(k,next);
+			if(Hash_gruppiert[k][0] == 0 && Hash_gruppiert[k][1] == 0){
+				Hash_gruppiert[k][0] = x; Hash_gruppiert[k][1] = y;
+				++H_gruppiert;
+				if(next > maxNEXT_gruppiert)maxNEXT_gruppiert = next;
+				return;
+			}
 			if(next == H_P){
 				printf("B Hashtabelle zu dicht belegt! (%d)",H_gruppiert);
 				exit(-1);
 			}
 			++next;
 		}
-		Hash_gruppiert[k][0] = x; Hash_gruppiert[k][1] = y;
-		++H_gruppiert;
-		if(next > maxNEXT_gruppiert)maxNEXT_gruppiert = next;
 	}
 }
 
@@ -130,20 +138,24 @@ void H_loesen(unsigned int x, unsigned int y){
 	if(Hash_geloest[k][0] == 0 && Hash_geloest[k][1] == 0){
 		Hash_geloest[k][0] = x; Hash_geloest[k][1] = y;
 		++H_geloest;
+		return;
 	}
 	else {
-		printf("Kollision loesen!\n");exit(0);
 		unsigned int next=1;
-		while(!(Hash_geloest[H_next_berechnen(k,next)][0] == 0 && Hash_geloest[H_next_berechnen(k,next)][1] == 0)){
+		while(1){
+			printf("%d Kollision (geloest) (%u,%u) an k=%d\n",next,x,y,k);
+			k = H_next_berechnen(k,next);
+			if(Hash_geloest[k][0] == 0 && Hash_geloest[k][1] == 0){
+				Hash_geloest[k][0] = x; Hash_geloest[k][1] = y;
+				++H_geloest;
+				if(next > maxNEXT_geloest)maxNEXT_geloest = next;
+			}
 			if(next == H_P){ //problem: max. def. dichte erreicht => abbruch
 				printf("C Hashtabelle zu dicht belegt! ()");
 				exit(-1);
 			}
 			++next;
 		}
-		Hash_geloest[k][0] = x; Hash_geloest[k][1] = y;
-		++H_geloest;
-		if(next > maxNEXT_geloest)maxNEXT_geloest = next;
 	}
 }
 
@@ -180,19 +192,21 @@ void H_eintragen(unsigned int x, unsigned int y){
 		++H_belegt;
 	}
 	else {
-		//printf("%d: Kollision eintragen. Element (%u,%u)!\n",x,y);//exit(0);
-		++Kollisionen;
 		unsigned int next=1;
-		while(!(Hash_liste[H_next_berechnen(k,next)][0] == 0 && Hash_liste[H_next_berechnen(k,next)][1] == 0)){
+		while(1){
+			printf("%d Kollision (eintragen) (%u,%u) an k=%d\n",next,x,y,k);
+			k = H_next_berechnen(k,next);
+			if((Hash_liste[k][0] == 0 && Hash_liste[k][1] == 0)){
+				Hash_liste[k][0] = x; Hash_liste[k][1] = y;
+				++H_belegt;
+				return;
+			}
 			if(next == H_P){ //problem: max. def. dichte erreicht => abbruch
 				printf("A Hashtabelle zu dicht belegt!");
 				exit(-1);
 			}
 			++next;
 		}
-		Hash_liste[k][0] = x; Hash_liste[k][1] = y;
-		++H_belegt;
-		if(next > maxNEXT_liste)maxNEXT_liste = next;
 	}
 }
 
@@ -634,7 +648,6 @@ int raeume_linearH_schritt(int index, int i, int gruppiert, int x,int y){
 			Raeume[index][R__El_anz[index]][0] = Raeume[index][i][0]+x;
 			Raeume[index][R__El_anz[index]][1] = Raeume[index][i][1]+y;
 			H_gruppieren(Raeume[index][i][0]+x,Raeume[index][i][1]+y);
-			++R__El_anz[index];
 			return 1;
 		}
 	}
@@ -648,6 +661,7 @@ void raeume_linearH(){
 		exit(0);
 	}
 
+	printf("berechne raeume ...\n");
 
 	int index = 0;
 
@@ -662,7 +676,7 @@ void raeume_linearH(){
 					  ++R__El_anz[index];
 
 						H_gruppieren(Element_liste[k][0],Element_liste[k][1]);
-					  //printf("gruppiert / EL_anz: %u %u\n",gruppiert,EL_anz);
+					  printf("gruppiert / EL_anz: %u %u\n",gruppiert,EL_anz);
 						//printf("gruppe(%d): repraesentant: (%u,%u), gruppiert: %d\n", index,Raeume[index][0][0], Raeume[index][0][1],gruppiert);
 
 
@@ -674,22 +688,34 @@ void raeume_linearH(){
 
 
 				int i=0;
-				while(i < R__El_anz[index]){
+				while(i <= R__El_anz[index]){
 					//if(gruppiert % 100 <5)printf("raeume: %d / %d",gruppiert,anzKacheln);
 
 					//printf("		Betrachte: (%d,%d)\n",Raeume[index][i][0],Raeume[index][i][1]);
 
 					//linker Nachbar?
-					if(raeume_linearH_schritt(index,  i,  gruppiert, 0, 1) == 1)++gruppiert;
+					if(raeume_linearH_schritt(index,  i,  gruppiert, 0, 1) == 1){
+						++gruppiert;
+						++R__El_anz[index];
+					}
 						if(gruppiert == anzKacheln)break;
 					//rechter Nachbar?
-					if(raeume_linearH_schritt(index,  i,  gruppiert, 0, -1) == 1)++gruppiert;
+					if(raeume_linearH_schritt(index,  i,  gruppiert, 0, -1) == 1){
+						++gruppiert;
+						++R__El_anz[index];
+					}
 						if(gruppiert == anzKacheln)break;
 					//oberer Nachbar?
-					if(raeume_linearH_schritt(index,  i,  gruppiert, 1, 0) == 1)++gruppiert;
+					if(raeume_linearH_schritt(index,  i,  gruppiert, 1, 0) == 1){
+						++gruppiert;
+						++R__El_anz[index];
+					}
 						if(gruppiert == anzKacheln)break;
 					//unterer Nachbar?
-					if(raeume_linearH_schritt(index,  i,  gruppiert, -1, 0) == 1)++gruppiert;
+					if(raeume_linearH_schritt(index,  i,  gruppiert, -1, 0) == 1){
+							++gruppiert;
+							++R__El_anz[index];
+					}
 						if(gruppiert == anzKacheln)break;
 
 						//printf("		i=%d / Anzahl Element(Raum)=%d\n",i,R__El_anz[index]);
@@ -1020,8 +1046,8 @@ int main(void) {
 	validate_raeume();
 	printraeume();
 
+//	exit(0);
 
-	exit(0);
 
 	/*
 	int index =0;
