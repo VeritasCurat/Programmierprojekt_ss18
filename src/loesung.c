@@ -8,7 +8,7 @@
  ============================================================================
  */
 
- (29678,28065)
+ //TODO: fehler?(29678,28065)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -939,15 +939,19 @@ int validate_raeume(){
 	}
 	printf("%d / %d in raeumen verteilt!\n",anzraumkacheln,anzKacheln);
 
-	// int raum =0;
-	// while(R__El_anz[raum] > 0){
-	// 	for(int i=0; i<R__El_anz[raum]; ++i){
-	// 		int verbunden;
-	// 		for(int j=i+1; j<R__El_anz[raum]; ++j){
-	//
-	// 		}
-	// 	}
-	// }
+	int raumCHECK =0;
+  raum = 0;
+	while(R__El_anz[raum] > 0){
+		for(int i=0; i<R__El_anz[raum]; ++i){
+			for(int j=i+1; j<R__El_anz[raum]; ++j){
+        if(benachbart(Raeume[raum][i],Raeume[raum][i]) == 1)raumCHECK+=i;
+			}
+		}
+    ++raum;
+    if(raumCHECK !=(R__El_anz[raum] * R__El_anz[raum]+1)/2){
+      printf("Raum %i nicht zusammenhaengend!\n",raum);
+    }
+	}
 
 	return 1;
 }
