@@ -45,9 +45,6 @@ int Kollisionen= 0;
 
 //Adjazensliste + sort
 	unsigned int Element_liste[999983][2]; int EL_anz;
-
-
-
 	unsigned int Loesung_liste[999983][4]; unsigned int loesungsindex = 0;
 	unsigned int Raeume[1000][100000][2]; int R__El_anz[100];
 	unsigned int Loesung_Raeume[100][100000][4]; int R__El_anz[100];
@@ -83,7 +80,7 @@ unsigned int H_HP_berechnen(unsigned int x,unsigned int y){
 }
 
 unsigned int H_next_berechnen(unsigned int k, unsigned int next){
-	k =  (k*10+next*10) % H_P;
+	k =  (k*1000+next*10) % H_P;
 //	k^=323522*(x*y);
 	return k;
 }
@@ -114,17 +111,12 @@ void H_gruppieren(unsigned int x,unsigned int y){
 	else {
 		unsigned int next=1;
 		while(1){
-			if(next >= 10)exit(0);
-			k = H_next_berechnen(k,next);
 			printf("%d Kollision (gruppiert) (%u,%u) an k=%d\n",next,x,y,k);
+			k = H_next_berechnen(k,next);
 			if(Hash_gruppiert[k][0] == 0 && Hash_gruppiert[k][1] == 0){
-				printf("nach Kollision eingetragen: (%d,%d) an %d\n",x,y,k);
 				Hash_gruppiert[k][0] = x; Hash_gruppiert[k][1] = y;
 				++H_gruppiert;
-				if(next > maxNEXT_gruppiert){
-					printf("neues maxNEXT_gruppiert : %d\n",next );
-					maxNEXT_gruppiert = next;
-				}
+				if(next > maxNEXT_gruppiert)maxNEXT_gruppiert = next;
 				return;
 			}
 			if(next == H_P){
@@ -151,7 +143,6 @@ void H_loesen(unsigned int x, unsigned int y){
 	else {
 		unsigned int next=1;
 		while(1){
-			if(next >= 10)exit(0);
 			printf("%d Kollision (geloest) (%u,%u) an k=%d\n",next,x,y,k);
 			k = H_next_berechnen(k,next);
 			if(Hash_geloest[k][0] == 0 && Hash_geloest[k][1] == 0){
@@ -177,19 +168,16 @@ void H_loesen_loeschen(unsigned int x, unsigned int y){
 	else {
 		//inplace hashing
 		unsigned int next=1;
-		while(1){
-				k = H_next_berechnen(k,next);
-				if(Hash_geloest[k][0] == x && Hash_geloest[k][1] == y){
-					Hash_geloest[k][0] = 0; Hash_geloest[k][1] = 0;
-					--H_geloest;
-				}
-				if(next == maxNEXT_geloest*2){ //problem: max. def. dichte erreicht => abbruch
-					printf("H_loesen_loeschen Fehler => ELement (%d,%d) verschwunden",x,y);
-					exit(-1);
-				}
+		while(!(Hash_geloest[H_next_berechnen(k,next)][0] != x && Hash_geloest[H_next_berechnen(k,next)][1] != y)){
+				if(next == maxNEXT_geloest){ //problem: max. def. dichte erreicht => abbruch
+				printf("H_loesen_loeschen Fehler => ELement (%d,%d) verschwunden",x,y);
+				exit(-1);
 			}
 			++next;
 		}
+		Hash_geloest[k][0] = 0; Hash_geloest[k][1] = 0;
+		--H_geloest;
+	}
 }
 
 void H_eintragen(unsigned int x, unsigned int y){
@@ -202,22 +190,15 @@ void H_eintragen(unsigned int x, unsigned int y){
 	if(Hash_liste[k][0] == 0 && Hash_liste[k][1] == 0){
 		Hash_liste[k][0] = x; Hash_liste[k][1] = y;
 		++H_belegt;
-		return;
 	}
 	else {
 		unsigned int next=1;
 		while(1){
-			++Kollisionen;
-			if(next >= 10)exit(0);
+			printf("%d Kollision (eintragen) (%u,%u) an k=%d\n",next,x,y,k);
 			k = H_next_berechnen(k,next);
 			if((Hash_liste[k][0] == 0 && Hash_liste[k][1] == 0)){
-				printf("%d Kollision (eintragen) (%u,%u) an k=%d\n",next,x,y,k);
 				Hash_liste[k][0] = x; Hash_liste[k][1] = y;
 				++H_belegt;
-				if(next > maxNEXT_liste){
-					maxNEXT_liste = next;
-					printf("			neues maxNEXT_liste: %d\n",maxNEXT_liste );
-				}
 				return;
 			}
 			if(next == H_P){ //problem: max. def. dichte erreicht => abbruch
@@ -248,7 +229,7 @@ int H_suchen(unsigned int x, unsigned int y){
 		while(1){
 			k = H_next_berechnen(k,x);
 			if(Hash_liste[k][0] == x && Hash_liste[k][1] == y) return 1;
-			if(next == maxNEXT_liste*2){ //problem: max. def. dichte erreicht => abbruch
+			if(next == maxNEXT_liste){ //problem: max. def. dichte erreicht => abbruch
 				return -1;
 			}
 			++next;
@@ -257,7 +238,7 @@ int H_suchen(unsigned int x, unsigned int y){
 }
 
 int H_abfrage_gruppiert(unsigned int x, unsigned int y){
-	//if(x==29678 && y == 32447)printf("		grupiert?: (%d,%d)\n:",x,y);
+	//printf("		grupiert?: (%d,%d)\n:",x,y);
 
 	unsigned int k = H_HP_berechnen(x,y);
 	if(Hash_gruppiert[k][0] == x && Hash_gruppiert[k][1] ==y){
@@ -267,13 +248,9 @@ int H_abfrage_gruppiert(unsigned int x, unsigned int y){
 		//inplace hashing
 		unsigned int next=1;
 		while(1){
-			printf("%d SuchTry (gruppiert) (%u,%u) an k=%u\n",next,x,y,k);
 			k = H_next_berechnen(k,x);
-			if(Hash_gruppiert[k][0] == x && Hash_gruppiert[k][1] == y){
-				printf("nach %d SuchTry's (gruppiert) gefunden (%u,%u) an k=%u\n",next,x,y,k);
-				return 1;
-			}
-			if(next == maxNEXT_gruppiert*2){ //problem: max. def. dichte erreicht => abbruch
+			if(Hash_gruppiert[k][0] == x && Hash_gruppiert[k][1] == y) return 1;
+			if(next == maxNEXT_gruppiert){ //problem: max. def. dichte erreicht => abbruch
 				return -1;
 			}
 			++next;
@@ -294,7 +271,7 @@ int H_abfrage_geloest(unsigned int x, unsigned int y){
 		while(1){
 			k = H_next_berechnen(k,x);
 			if(Hash_geloest[k][0] == x && Hash_geloest[k][1] == y) return 1;
-			if(next == maxNEXT_geloest*2){ //problem: max. def. dichte erreicht => abbruch
+			if(next == maxNEXT_geloest){ //problem: max. def. dichte erreicht => abbruch
 				return -1;
 			}
 			++next;
@@ -306,13 +283,13 @@ void init(){
 
 //	int (*Element_liste)[2] = malloc(sizeof(int[liste_size][2])); //TODOfree(Element_liste)
 
-	for(int i=0; i<999983; i++){
-		Element_liste[i][0] = 0; Element_liste[i][1] = 0;
+	for(int i=0; i<liste_size; i++){
+		Element_liste[i][0] = -1; Element_liste[i][1] = -1;
 	}
 
 	for(int raum=0; raum<100; raum++){
-			for(int i=0; i<999983; i++){
-						Raeume[raum][i][0] = 0; Raeume[raum][i][1] = 0;
+			for(int i=0; i<liste_size; i++){
+						Raeume[raum][i][0] = -1; Raeume[raum][i][1] = -1;
 			}
 	}
 
@@ -321,7 +298,7 @@ void init(){
 
 void printlist(){
 	for(int i=0; i<position; i++){
-				printf("%u: A: %u, B: %u (k=%u)\n", i, Element_liste[i][0] , Element_liste[i][1], H_HP_berechnen(Element_liste[i][0] , Element_liste[i][1]));
+				printf("%u: A: %u, B: %u\n", i, Element_liste[i][0] , Element_liste[i][1]);
 	}
 }
 
@@ -658,20 +635,13 @@ void raeume_prim(){
 }
 
 int raeume_linearH_schritt(int index, int i, int gruppiert, int x,int y){
-	int debug = 0;
-	if(Raeume[index][i][0] == 29678 && Raeume[index][i][1] == 32447){
-		debug = 1;
-	}
  	int	k = H_suchen(Raeume[index][i][0]+x,Raeume[index][i][1]+y);
 	if(k!=-1){
 		//schon in Raum eingetragen?
-		if(debug == 1) printf("Nachbar :(%u,%u)\n", Raeume[index][i][0]+x,Raeume[index][i][1]+y);
 		if(H_abfrage_gruppiert(Raeume[index][i][0]+x,Raeume[index][i][1]+y) > -1){
 
 		}
 		else{
-			//if(debug == 1) printf("Nachbar und nicht gruppiert:(%u,%u)\n", Raeume[index][i][0]+x,Raeume[index][i][1]+y);
-
 			//printf("		Nachbarn eintragen: (%u,%u) (%u,%u)\n",Raeume[index][i][0],Raeume[index][i][1],Raeume[index][i][0]+x,Raeume[index][i][1]+y);
 
 			//printf("%d Nachbarn: (%u,%u) (%u,%u)\n",gruppiert,Raeume[index][i][0],Raeume[index][i][1],Raeume[index][i][0]+x,Raeume[index][i][1]+y);
@@ -695,9 +665,9 @@ void raeume_linearH(){
 
 	int index = 0;
 
-		while(gruppiert < anzKacheln){
+		while(gruppiert < EL_anz){
 			//schreibe erstes ELement (nicht (-1,-1) in neue Gruppe
-				for(int k=0; k<anzKacheln; k++){
+				for(int k=0; k<EL_anz; k++){
 					// if(!(Element_liste[k][0] == 0 && Element_liste[k][1] == 0)){
 						if(H_abfrage_gruppiert(Element_liste[k][0],Element_liste[k][1]) > -1)continue;
 
@@ -706,7 +676,7 @@ void raeume_linearH(){
 					  ++R__El_anz[index];
 
 						H_gruppieren(Element_liste[k][0],Element_liste[k][1]);
-					  printf("gruppiert / EL_anz: %u %u\n",gruppiert,anzKacheln);
+					  printf("gruppiert / EL_anz: %u %u\n",gruppiert,EL_anz);
 						//printf("gruppe(%d): repraesentant: (%u,%u), gruppiert: %d\n", index,Raeume[index][0][0], Raeume[index][0][1],gruppiert);
 
 
@@ -716,11 +686,8 @@ void raeume_linearH(){
 				}
 				// }
 
-				if(gruppiert == anzKacheln)break;
-
 
 				int i=0;
-				int nachbarn =0;
 				while(i <= R__El_anz[index]){
 					//if(gruppiert % 100 <5)printf("raeume: %d / %d",gruppiert,anzKacheln);
 
@@ -730,55 +697,33 @@ void raeume_linearH(){
 					if(raeume_linearH_schritt(index,  i,  gruppiert, 0, 1) == 1){
 						++gruppiert;
 						++R__El_anz[index];
-						++nachbarn;
 					}
 						if(gruppiert == anzKacheln)break;
 					//rechter Nachbar?
 					if(raeume_linearH_schritt(index,  i,  gruppiert, 0, -1) == 1){
 						++gruppiert;
 						++R__El_anz[index];
-						++nachbarn;
 					}
 						if(gruppiert == anzKacheln)break;
 					//oberer Nachbar?
 					if(raeume_linearH_schritt(index,  i,  gruppiert, 1, 0) == 1){
 						++gruppiert;
 						++R__El_anz[index];
-						++nachbarn;
 					}
 						if(gruppiert == anzKacheln)break;
 					//unterer Nachbar?
 					if(raeume_linearH_schritt(index,  i,  gruppiert, -1, 0) == 1){
 							++gruppiert;
 							++R__El_anz[index];
-							++nachbarn;
 					}
-					if(nachbarn == 0){
-						printf("(%d,%d) hat keine Nachbarn!!!\n",Raeume[index][i][0],Raeume[index][i][1]);
-						printf("%u\n", H_suchen(Raeume[index][i][0],Raeume[index][i][1]+1));
-						printf("%u\n", H_suchen(Raeume[index][i][0],Raeume[index][i][1]-1));
-						printf("%u\n", H_suchen(Raeume[index][i][0]+1,Raeume[index][i][1]));
-						printf("%u\n", H_suchen(Raeume[index][i][0]-1,Raeume[index][i][1]));
-
-						exit(0);
-					}
-
-
 						if(gruppiert == anzKacheln)break;
 
 						//printf("		i=%d / Anzahl Element(Raum)=%d\n",i,R__El_anz[index]);
 
 						++i;
-						nachbarn = 0;
 				}
-				if(gruppiert == anzKacheln)break;
-
 			if(R__El_anz[index] % 2 == 1){
 				printf("Ein Raum hat eine ungerade Anzahl von Kacheln (Raum %d: %d Kacheln)\n",index, R__El_anz[index] );
-				for(int i=0; i<R__El_anz[index]; ++i){
-					printf("			(%d,%d)\n",Raeume[R__El_anz[index]][i][0],Raeume[R__El_anz[index]][i][1]);
-				}
-				exit(-1);
 			}
 			//sortiere (notwendig?)
 			//sort();
@@ -1085,14 +1030,15 @@ int main(void) {
 	//printf("eingelesen ... !");
 
 //printf("transformiert ... !");
+	//printlist();
 
-	sort();
-	printlist();
 
 	H_hashtabelle_erstellen();
 	printf("hs angefertigt ... %d Eintraege, %d Kollisionen!\n",H_belegt,Kollisionen);
 
+	//sort();
 
+	//H_printHash();
 
 	raeume_linearH();
 //	raeume_prim();
@@ -1100,7 +1046,7 @@ int main(void) {
 	validate_raeume();
 	printraeume();
 
-	exit(0);
+//	exit(0);
 
 
 	/*
