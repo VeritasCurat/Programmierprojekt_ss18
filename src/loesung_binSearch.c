@@ -7,6 +7,8 @@
  Description : Programmierprojekt SS18
  ============================================================================
  */
+//TODO: mit devin klaeren: sort() dynamisch;
+
  #include <string.h> //TODO: entfernen
 
  #include <stdio.h>
@@ -15,11 +17,15 @@
  #include <stdint.h>
 
 //Phase1: Initialisieren der DS, Einlesen von String und umwandeln in unsigned int Element_liste[][2]:
+  static void EL_reallozieren();
+  static void EL_allozieren();
+  static void EL_einfuegen(unsigned int x, unsigned int y);
+  static void EL_ausgabe();
+  static void EL_free_numbers(unsigned int **array, size_t size);
   void init();
   void einlesen();
   void koordinate_einlesen(char* zeile);
   int chartoint(char c);
-  void einfuegen(unsigned int x,unsigned int y);
   int legalesZeichen(char c);
 
 //Phase2: Sortieren der Liste mit Quicksort:
@@ -45,7 +51,7 @@ int debug4 = 0;
 
 
 //Container fuer Vektoren
-unsigned int* Element_liste[2]; int EL_anz = 0; int EL_platz = 1000;//hier werden alle Koordinaten gespeichert
+unsigned int **Element_liste = 0; int EL_platz=1000; int EL_anz=0;//hier werden alle Koordinaten gespeichert
 unsigned int Raeume[1000][100000][2]; int R__El_anz[100]; int gruppiert = 0;
 
 unsigned int Loesung_R[1000][4]; 	int index_loesung=0; //
@@ -57,15 +63,68 @@ unsigned int Loesung_Raeume[100][100000][4]; int R__El_anz[100];
 int gruppiert_liste[999983];
 int geloest_liste[999983];
 
-unsigned int anzKacheln;
 size_t liste_size = 999983;
 
+//allozierten speicher freigeben
+void beenden(){
+  for (size_t i = 0; i < EL_anz; i++)free(Element_liste[i]);
+  free(Element_liste);
+}
+
+
+static void EL_free_numbers(unsigned int **array, size_t size)
+{
+    for (size_t i = 0; i < size; i++)
+        free(array[i]);
+    free(array);
+}
+
+static void EL_allozieren(){
+  Element_liste = (unsigned int **)malloc(EL_platz * sizeof(*Element_liste));
+
+
+}
+
+static void EL_reallozieren(){
+  int newnum = (EL_platz + 2) * 2;   /* 4, 12, 28, 60, ... */
+  unsigned int **newptr = (unsigned int **)realloc(Element_liste, newnum * sizeof(*Element_liste));
+  printf("%d\n", EL_platz);
+  if (newptr == NULL)
+  {
+      EL_free_numbers(Element_liste, EL_anz);
+      exit(1);
+  }
+  EL_platz = newnum;
+  Element_liste = newptr;
+}
+
+static void EL_einfuegen(unsigned int x, unsigned int y){
+  if (EL_anz == EL_platz)
+  {
+    EL_reallozieren();
+  }
+  Element_liste[EL_anz] = (unsigned int *)malloc(2 * sizeof(unsigned int));
+  if (Element_liste[EL_anz] == 0)
+  {
+      EL_free_numbers(Element_liste, EL_anz);
+      exit(1);
+  }
+  Element_liste[EL_anz][0] = x;
+  Element_liste[EL_anz][1] = y;
+  EL_anz++;
+}
+
+static void EL_ausgabe(){
+  for(int zeile=0; zeile<EL_anz; zeile++){
+    printf("%d: (%u,%u)\n",zeile, Element_liste[zeile][0], Element_liste[zeile][1]);
+  }
+}
 
 void init(){
-  int* Element_liste = (int *)malloc(EL_anz * 2 * sizeof(int)); //TODO: free(Element_liste
+  EL_allozieren();
 
-  for(int i=0; i<anzKacheln; i++){
-    Element_liste[i][0] = 0; Element_liste[i][1] = 0;
+
+  for(int i=0; i<EL_platz; i++){
     geloest_liste[i]=0;
     gruppiert_liste[i]=0;
   }
@@ -76,7 +135,7 @@ void init(){
     }
   }
 
-  for(int i=0; i<anzKacheln; i++){
+  for(int i=0; i<EL_anz; i++){
     Loesung_R[i][0] = 0;
     Loesung_R[i][1] = 0;
     Loesung_R[i][2] = 0;
@@ -94,13 +153,11 @@ void einlesen(){
 void koordinate_einlesen(char* zeile){
   unsigned int a,b; a=b=0;
   int a_len = 0; int b_len =0;
-
   int i=0;
   for(;i<strlen(zeile); i++){
     if(zeile[i]==' ')continue;
     if(chartoint(zeile[i]) != -1) break;
   }
-
 
   for(;i<strlen(zeile); i++){
     if(zeile[i]==' ')break;
@@ -118,7 +175,6 @@ void koordinate_einlesen(char* zeile){
       exit(-1);
     }
   }
-
 
   for(;i<strlen(zeile); i++){
     if(zeile[i]==' ')continue;
@@ -155,8 +211,7 @@ void koordinate_einlesen(char* zeile){
   //   exit(-1);
   // }
   //printf("A: %u B: %u\n", a,b);
-  ++anzKacheln; ++EL_anz;
-  einfuegen(a,b);
+  EL_einfuegen(a,b);
 }
 
 int legalesZeichen(char c){
@@ -181,16 +236,11 @@ int chartoint(char c){
  }
 }
 
-void einfuegen(unsigned int x,unsigned int y){
-  Element_liste[EL_anz][0] = (unsigned int) x;
-  Element_liste[EL_anz][1] = (unsigned int) y;
-  ++EL_anz;
-}
 //Phase2
 
 //liest unsigned int, gibt 11 stelligen String repraesentant aus
 int binSearch(unsigned int x, unsigned int y){
-  int l=0; int r=anzKacheln-1; int m;
+  int l=0; int r=EL_anz-1; int m;
   while(l <= r){
     m = (int) ((r+l)/2);
     if(compare(Element_liste[m][0], Element_liste[m][1], x, y) < 0){
@@ -241,7 +291,19 @@ static int comp(const void* a, const void* b) {
 }
 
 void sort(){
-   qsort(Element_liste, EL_anz, 2*sizeof(int), comp);
+  unsigned int transfer[EL_anz][2];
+  for(int i=0; i<EL_anz; i++){
+    transfer[i][0]=Element_liste[i][0];
+    transfer[i][1]=Element_liste[i][1];
+  }
+
+  qsort(transfer, EL_anz, sizeof(int)*2, comp);
+  //qsort(Element_liste, sizeof(Element_liste) / sizeof(*Element_liste), sizeof(Element_liste), comp);
+
+  for(int i=0; i<EL_anz; i++){
+    Element_liste[i][0]=transfer[i][0];
+    Element_liste[i][1]=transfer[i][1];
+  }
 }
 
 //Phase3
@@ -255,7 +317,6 @@ void sort_raeume(){
 }
 
 int raeume_linearH_schritt(int index, int i, int gruppiert, int x,int y){
-
   if(debug3)printf("(%u,%u) Nachbar?\n", Raeume[index][i][0]+x,Raeume[index][i][1]+y);
  	int	k = binSearch(Raeume[index][i][0]+x,Raeume[index][i][1]+y);
   if(k!=-1){
@@ -275,33 +336,32 @@ int raeume_linearH_schritt(int index, int i, int gruppiert, int x,int y){
 }
 
 void raeume_linearH(){
-  if(anzKacheln % 2 == 1){printf("Keine Loesung moeglich (ungerade Anzahl Kacheln!) %d\n",anzKacheln); exit(0);}
+  if(EL_anz % 2 == 1){printf("Keine Loesung moeglich (ungerade Anzahl Kacheln!) %d\n",EL_anz); exit(0);}
   int index = 0;
 
   int k=0;
-  while(gruppiert < anzKacheln){
-    for(; k<anzKacheln; k++){
+  while(gruppiert < EL_anz){
+    for(; k<EL_anz; k++){
       if(debug3)printf("Kandidat fuer 1 Element (%d)?\n",k);
       if(gruppiert_liste[k] == 1)continue;
       Raeume[index][0][0] = Element_liste[k][0];
       Raeume[index][0][1] = Element_liste[k][1];
-      if(debug3)printf("TESTUS777");
       ++R__El_anz[index];
 
       gruppiert_liste[k] = 1;
-      if(debug3)printf("gruppiert / EL_anz: %u %u\n",gruppiert,anzKacheln);
+      if(debug3)printf("gruppiert / EL_anz: %u %u\n",gruppiert,EL_anz);
       if(debug3)printf("gruppe(%d): repraesentant: (%u,%u)\n", index,Raeume[index][0][0], Raeume[index][0][1]);
 
       ++gruppiert;
       break;
     }
 
-    if(gruppiert == anzKacheln)break;
+    if(gruppiert == EL_anz)break;
 
     int i=0;
     int nachbarn =0;
     while(i < R__El_anz[index]){
-      //if(gruppiert % 100 <5)printf("raeume: %d / %d",gruppiert,anzKacheln);
+      //if(gruppiert % 100 <5)printf("raeume: %d / %d",gruppiert,EL_anz);
 
       if(debug3)printf("\n\n Betrachte: (%u,%u)\n",Raeume[index][i][0],Raeume[index][i][1]);
 
@@ -311,21 +371,21 @@ void raeume_linearH(){
         ++R__El_anz[index];
         ++nachbarn;
       }
-      if(gruppiert == anzKacheln)break;
+      if(gruppiert == EL_anz)break;
       //rechter Nachbar?
       if(raeume_linearH_schritt(index,  i,  gruppiert, 0, -1) == 1){
         ++gruppiert;
         ++R__El_anz[index];
         ++nachbarn;
       }
-      if(gruppiert == anzKacheln)break;
+      if(gruppiert == EL_anz)break;
       //oberer Nachbar?
       if(raeume_linearH_schritt(index,  i,  gruppiert, 1, 0) == 1){
         ++gruppiert;
         ++R__El_anz[index];
         ++nachbarn;
       }
-      if(gruppiert == anzKacheln)break;
+      if(gruppiert == EL_anz)break;
       //unterer Nachbar?
       if(raeume_linearH_schritt(index,  i,  gruppiert, -1, 0) == 1){
         ++gruppiert;
@@ -334,14 +394,14 @@ void raeume_linearH(){
       }
       printf("%d hat keinen ungruppierten Nachbarn\n",i );
 
-      if(gruppiert == anzKacheln)break;
+      if(gruppiert == EL_anz)break;
 
       if(debug3)printf("		i=%d / %d Anzahl Element(Raum)\n",i+1,R__El_anz[index]);
 
       ++i;
       nachbarn = 0;
     }
-    if(gruppiert == anzKacheln)break;
+    if(gruppiert == EL_anz)break;
 
     if(R__El_anz[index] % 2 == 1){
       printf("Ein Raum hat eine ungerade Anzahl von Kacheln (Raum %d: %d Kacheln)\n",index, R__El_anz[index] );
@@ -438,7 +498,7 @@ int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, in
     if(index_loesung > 0)return 0;
   }//Ende FOR Schleife
 
-  // if(sprung == anzKacheln-1)return 2;
+  // if(sprung == EL_anz-1)return 2;
   if(debug4)printf("springe zurueck ...\n");
   return 2;
 }
@@ -488,25 +548,52 @@ int loesungsschritt(int raum, unsigned int loesung[][4], int index_loesung_raum,
 void loesung_binSearch(){
   init();
   einlesen();
+
   sort();
+  EL_ausgabe();
+  EL_free_numbers(Element_liste, EL_anz);
+  exit(0);
+
+
+
   raeume_linearH();
   sort_raeume();
 
-  exit(0);
 
-  for(int raum = 0; ;++raum){
-    if(R__El_anz[raum] == 0)break;
-    printf("loese raum %d\n", raum);
-    loesung_prim(raum, Loesung_R, 0,index_loesung);
-  }
+  // for(int raum = 0; ;++raum){
+  //   if(R__El_anz[raum] == 0)break;
+  //   printf("loese raum %d\n", raum);
+  //   loesung_prim(raum, Loesung_R, 0,index_loesung);
+  // }
+  //
+  // printf("\n\nLoesung:\n");
+  // for(int i=0; i<loesungsindex; i++){
+  //   if(Loesung_liste[i][0] == 0 &&	Loesung_liste[i][1] == 0 && Loesung_liste[i][2] == 0 &&	Loesung_liste[i][3] == 0)continue;
+  //   printf("%u %u;%u %u\n", Loesung_liste[i][0],Loesung_liste[i][1],Loesung_liste[i][2],Loesung_liste[i][3]);
+  // }
+  //
+  // printf("index_loesung: %u\n",index_loesung);
 
-  printf("\n\nLoesung:\n");
-  for(int i=0; i<loesungsindex; i++){
-    if(Loesung_liste[i][0] == 0 &&	Loesung_liste[i][1] == 0 && Loesung_liste[i][2] == 0 &&	Loesung_liste[i][3] == 0)continue;
-    printf("%u %u;%u %u\n", Loesung_liste[i][0],Loesung_liste[i][1],Loesung_liste[i][2],Loesung_liste[i][3]);
-  }
 
-  printf("index_loesung: %u\n",index_loesung);
+
 }
 
-int main(void){loesung_binSearch();}
+int main(void){
+  loesung_binSearch();
+
+    init();
+
+    einlesen();
+
+    EL_ausgabe();
+
+    EL_free_numbers(Element_liste, EL_anz);
+
+
+
+    exit(0);
+
+  beenden();
+
+
+}

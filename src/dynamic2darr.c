@@ -1,70 +1,68 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-unsigned int **numbers = 0;
-int groesse=1000;
-int anzahl=0;
+unsigned int **Element_liste = 0; int EL_platz=1000; int EL_anz=0;
 
-static void free_numbers(unsigned int **array, size_t size)
+static void EL_free_numbers(unsigned int **array, size_t size)
 {
     for (size_t i = 0; i < size; i++)
         free(array[i]);
     free(array);
 }
 
-static void allozieren(){
-  numbers = (unsigned int **)malloc(groesse * sizeof(*numbers));
+static void EL_allozieren(){
+  Element_liste = (unsigned int **)malloc(EL_platz * sizeof(*Element_liste));
 
 
 }
 
-static void reallozieren(){
-  int newnum = (groesse + 2) * 2;   /* 4, 12, 28, 60, ... */
-  unsigned int **newptr = (unsigned int **)realloc(numbers, newnum * sizeof(*numbers));
-  printf("%d\n", groesse);
+static void EL_reallozieren(){
+  int newnum = (EL_platz + 2) * 2;   /* 4, 12, 28, 60, ... */
+  unsigned int **newptr = (unsigned int **)realloc(Element_liste, newnum * sizeof(*Element_liste));
+  printf("%d\n", EL_platz);
   if (newptr == NULL)
   {
-      free_numbers(numbers, anzahl);
+      EL_free_numbers(Element_liste, EL_anz);
       exit(1);
   }
-  groesse = newnum;
-  numbers = newptr;
+  EL_platz = newnum;
+  Element_liste = newptr;
 }
 
-static void einfuegen(unsigned int x, unsigned int y){
-  if (anzahl == groesse)
+static void EL_einfuegen(unsigned int x, unsigned int y){
+  if (EL_anz == EL_platz)
   {
-    reallozieren();
+    EL_reallozieren();
   }
-  numbers[anzahl] = (unsigned int *)malloc(2 * sizeof(unsigned int));
-  if (numbers[anzahl] == 0)
+  Element_liste[EL_anz] = (unsigned int *)malloc(2 * sizeof(unsigned int));
+  if (Element_liste[EL_anz] == 0)
   {
-      free_numbers(numbers, anzahl);
+      EL_free_numbers(Element_liste, EL_anz);
       exit(1);
   }
-  numbers[anzahl][0] = x;
-  numbers[anzahl][1] = y;
-  anzahl++;
+  Element_liste[EL_anz][0] = x;
+  Element_liste[EL_anz][1] = y;
+  EL_anz++;
 }
 
-static void ausgabe(){
-  for(int zeile=0; zeile<anzahl; zeile++){
-    printf("%d: (%u,%u)\n",zeile, numbers[zeile][0], numbers[zeile][1]);
+static void EL_ausgabe(){
+  for(int zeile=0; zeile<EL_anz; zeile++){
+    printf("%d: (%u,%u)\n",zeile, Element_liste[zeile][0], Element_liste[zeile][1]);
   }
 }
 
 
 int main(void)
 {
-    allozieren();
-    einfuegen(2,0);
+    EL_allozieren();
+    EL_einfuegen(2,0);
 
     for(unsigned int zeile=0; zeile<1000000; zeile++){
-        einfuegen(zeile,0);
+        EL_einfuegen(zeile,0);
     }
 
-    ausgabe();
+    EL_ausgabe();
 
-    free_numbers(numbers, anzahl);
+    EL_free_numbers(Element_liste, EL_anz);
     return 0;
 }
