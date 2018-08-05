@@ -45,7 +45,7 @@ int debug4 = 0;
 
 
 //Container fuer Vektoren
-unsigned int Element_liste[1000][2]; int EL_anz; int EL_platz = 1000;//hier werden alle Koordinaten gespeichert
+unsigned int* Element_liste[2]; int EL_anz = 0; int EL_platz = 1000;//hier werden alle Koordinaten gespeichert
 unsigned int Raeume[1000][100000][2]; int R__El_anz[100]; int gruppiert = 0;
 
 unsigned int Loesung_R[1000][4]; 	int index_loesung=0; //
@@ -58,12 +58,12 @@ int gruppiert_liste[999983];
 int geloest_liste[999983];
 
 unsigned int anzKacheln;
-int position=0;
 size_t liste_size = 999983;
 
 
 void init(){
-  //	int (*Element_liste)[2] = malloc(sizeof(int[liste_size][2])); //TODO: free(Element_liste)
+  int* Element_liste = (int *)malloc(EL_anz * 2 * sizeof(int)); //TODO: free(Element_liste
+
   for(int i=0; i<anzKacheln; i++){
     Element_liste[i][0] = 0; Element_liste[i][1] = 0;
     geloest_liste[i]=0;
@@ -182,9 +182,9 @@ int chartoint(char c){
 }
 
 void einfuegen(unsigned int x,unsigned int y){
-  Element_liste[position][0] = (unsigned int) x;
-  Element_liste[position][1] = (unsigned int) y;
-  ++position;
+  Element_liste[EL_anz][0] = (unsigned int) x;
+  Element_liste[EL_anz][1] = (unsigned int) y;
+  ++EL_anz;
 }
 //Phase2
 
@@ -241,7 +241,7 @@ static int comp(const void* a, const void* b) {
 }
 
 void sort(){
-   qsort(Element_liste, position, 2*sizeof(int), comp);
+   qsort(Element_liste, EL_anz, 2*sizeof(int), comp);
 }
 
 //Phase3

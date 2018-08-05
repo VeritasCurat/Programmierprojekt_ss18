@@ -321,4 +321,4 @@ int testus(void){
     */
 }
 
-//void main(){testus();}
+void main(){testus();}
