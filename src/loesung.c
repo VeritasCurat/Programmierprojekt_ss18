@@ -8,7 +8,8 @@
  ============================================================================
  */
 
- //TODO: fehler?(29678,28065)
+#include "test.c"//TODO: entfernen
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,7 +19,7 @@
 #include <stdint.h>
 
 
-
+  int debug = 0;
 
 //TODO: (0,0) kann nicht gehashed werden! => work around
 
@@ -75,11 +76,7 @@ void init(){
   }
 }
 
-void printlist(){
-  for(int i=0; i<anzKacheln; i++){
-    printf("%u: A: %u, B: %u\n", i, Element_liste[i][0] , Element_liste[i][1]);
-  }
-}
+
 
 void printraeume(){
   int index =0;
@@ -93,9 +90,9 @@ void printraeume(){
   }
 }
 
-int suche(int x, int y){
-  for(int i=0; i< liste_size; i++){
-  if(Element_liste[i][0] == x && Element_liste[i][1] == y)return i;
+int suche(unsigned int x, unsigned int y){
+  for(int i=0; i< anzKacheln; i++){
+    if(Element_liste[i][0] == x && Element_liste[i][1] == y)return i;
   }
   return -1;
 }
@@ -116,28 +113,33 @@ int chartoint(char c){
  }
 }
 
-void inttostring(char b[], unsigned int x){
+void inttostring(char b[11], unsigned int x){
   int cnt=0;
-  if(x==0){b[0] = '0';return;}
-  else{
-    while(x>0){
-      b[cnt] = x%10 + '0';
-      x/=10;
-      ++cnt;
-    }
+  //falsch herum einlesen
+  if(x == 0){strcpy(b,"0000000000");}
+  while(cnt < 10){
+    b[cnt] = x%10 + '0';
+    x/=10;
+    ++cnt;
   }
 
-  for(int i = 0; i < cnt/2; ++i){
+  //umdrehen
+  for(int i = 0; i < 6; ++i){
     char c = b[i];
     b[i] = b[cnt-i-1];
     b[cnt-i-1] = c;
   }
+  //b[cnt] = '\0';
 
 
   //sprintf(b, "%u", x);
 }
 
-void binMeld(char res[], unsigned int x, unsigned int y){
+
+/**
+Bijektive Abbildung: (x,y) -> xy
+*/
+void binMeld(char res[22], unsigned int x, unsigned int y){
 //printf("      meld: (%u, %u)\n",x,y);
 
 
@@ -152,15 +154,16 @@ void binMeld(char res[], unsigned int x, unsigned int y){
   //printf("y = %s\n",b);
 
   int cnt =0;
-  for(int i=0; i<11; i++){
-    if(a[i] != '\0'){res[cnt] = a[i]; ++cnt;}
+  for(int i=0; i<10; i++){
+    if(a[i] != '\0'){res[cnt] = a[i];++cnt;}
   }
-  for(int i=0; i<11; i++){
-    if(b[i] != '\0'){res[cnt] = b[i]; ++cnt;}
+  for(int i=0; i<10; i++){
+    if(b[i] != '\0'){res[cnt] = b[i];++cnt;}
   }
-  for(cnt;cnt<22; cnt++){
-    res[cnt] = '0';
-  }
+
+  // for(cnt;cnt<22; cnt++){
+  //   res[cnt] = '0';
+  // }
   res[21]='\0';
 
   // for(int i=0; i<22; i++){
@@ -172,11 +175,11 @@ void binMeld(char res[], unsigned int x, unsigned int y){
 int binCompare(unsigned int x1, unsigned int y1, unsigned  int x2, unsigned int y2){
   char q[22] = "";
   char p[22] = "";
-  binMeld(q, x1,y1);
 
+  binMeld(q, x1,y1);
   binMeld(p, x2,y2);
 
-  //printf("q = %s, p = %s\n",q,p );
+  if(debug == 1)  printf("q = %s\np = %s\n",q,p );
 
   int l=0; int m=0;
   for(int i=0; i<20; i++){
@@ -198,12 +201,12 @@ int binSearch(unsigned int x, unsigned int y){
   while(l <= r){
     m = (int) ((r+l)/2);
     if(binCompare(Element_liste[m][0], Element_liste[m][1], x, y) < 0){
-      printf("<    l=%d, r=%d, m=%d\n",l,r,m );
+      if(debug == 1){printf("<    l=%d, r=%d, m=%d\n",l,r,m );}
       l = m+1;
       continue;
     }
     else if(binCompare(Element_liste[m][0], Element_liste[m][1], x, y) > 0){
-      printf(">    l=%d, r=%d, m=%d\n",l,r,m );
+      if(debug == 1)printf(">    l=%d, r=%d, m=%d\n",l,r,m );
       r = m-1;
       continue;
     }
@@ -218,6 +221,13 @@ int binSearch(unsigned int x, unsigned int y){
   }
 
 
+}
+
+void printlist(){
+  for(int i=0; i<anzKacheln; i++){
+    char a[22]="";binMeld(a,Element_liste[i][0] , Element_liste[i][1]);
+    printf("%u: A: %u, B: %u => %s\n", i, Element_liste[i][0] , Element_liste[i][1],a );
+  }
 }
 
 void delete(int x, int y){
@@ -906,33 +916,47 @@ int loesungsschritt(int raum, unsigned int loesung[][4], int index_loesung_raum,
 
 
 void binSearchTEST(){
-  printf("binSearch TEST\n\n\n");
+  printf("binSearch TEST ...");
+  int fehlgeschlagen=0;
   for(int i=0; i<anzKacheln; i++){
-    printf("(%u,%u): \n",Element_liste[i][0],Element_liste[i][1]);
+    //printf("(%u,%u): \n",Element_liste[i][0],Element_liste[i][1]);
 
     if(binSearch(Element_liste[i][0],Element_liste[i][1]) == -1){
-      printf("nicht gefunden!\n");
+      fehlgeschlagen = 1;
+      debug = 1;
+      binSearch(Element_liste[i][0],Element_liste[i][1]);
+      debug = 0;
+      printf("lineare Suche: %d \n",suche(Element_liste[i][0],Element_liste[i][1]));
+      printf("nicht gefunden!\n\n\n");
     }
     else {
-      printf("gefunden!\n");
+      continue;
+      //printf("gefunden!\n");
     }
   }
+  if(fehlgeschlagen == 0)printf("%s\n", " erfolgreich!" );
 }
 
 int main(void) {
+  testus();
+
+
 //TODO: raueme_lin macht bei ex1 aus (0,0) -> (2,0)
-    // char test[12]="";
-  // inttostring(test, 01);
-  //  printf("%s\n", test);
 
-  // binMeld(test, 0,1);
-  // printf("meld = %s\n",test );
+  // char sti[11]="";
+  // inttostring(sti,0);
+  // printf("%s\n", sti);
 
-  //printf("%d\n", binCompare(4294967289, 4294967287,4294967288, 4294967284));
-  //printf("%d\n", binCompare(1,0,0,1));
+  // char test[22]="";
+  // binMeld(test,1,0);
+  // printf("meld = %s\n",test);
+
+  //debug = 1;
+  // printf("%d\n", binCompare(4294967289, 4294967287,4294967288, 4294967284));
+  // printf("%d\n", binCompare(1,0,0,1));
 
 
-  // exit(0);
+   // exit(0);
 
   //setbuf(stdout, NULL); //Printout bug lösen
   init();
@@ -950,10 +974,10 @@ int main(void) {
 
   printf("sortiert... !\n");
 
-  printlist();
+  //printlist();
 
- binSearchTEST();
- exit(0);
+  binSearchTEST();
+  exit(0);
 
 
   raeume_linearH();
