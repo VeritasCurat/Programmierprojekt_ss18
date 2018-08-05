@@ -1,6 +1,6 @@
 /*
  ============================================================================
- Name        : Programmierprojekt.c
+ Name        : loesung_hashing.c
  Author      : Johannes Grobelski
  Version     :
  Copyright   : Your copyright noticeo,,,
@@ -16,7 +16,6 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <stdint.h>
 
 
   int debug = 0;
@@ -937,99 +936,32 @@ void binSearchTEST(){
   if(fehlgeschlagen == 0)printf("%s\n", " erfolgreich!" );
 }
 
-int main(void) {
-  testus();
-
-
-//TODO: raueme_lin macht bei ex1 aus (0,0) -> (2,0)
-
-  // char sti[11]="";
-  // inttostring(sti,0);
-  // printf("%s\n", sti);
-
-  // char test[22]="";
-  // binMeld(test,1,0);
-  // printf("meld = %s\n",test);
-
-  //debug = 1;
-  // printf("%d\n", binCompare(4294967289, 4294967287,4294967288, 4294967284));
-  // printf("%d\n", binCompare(1,0,0,1));
-
-
-   // exit(0);
-
-  //setbuf(stdout, NULL); //Printout bug lösen
+void loesung_sort(){
   init();
-
-  //funktionstestH();exit(0);
-
-  einlesen(); //Dauert bei ex4 schon 60s
-
-  //test();
-
-  printf("eingelesen ... !\n");
-
-
-  sort();
-
-  printf("sortiert... !\n");
-
-  //printlist();
-
-  binSearchTEST();
-  exit(0);
-
-
+  einlesen();
   raeume_linearH();
-
-
-  //if(validate_raeume() == 0)exit(0);
-  printf("Alles gruppiert ...\n");
-
   sort_raeume();
-  printraeume();
-
-  exit(0);
-
-  /*
-  int index =0;
-  while(R__El_anz[index] != 0){
-  if(R__El_anz[index]%2==1){
-  printf("In einem der Rauume ist die Anzahl der Plätze ungerade => unlösbar!");
-  exit(0);
-  }
-  ++index;
-  }
-  */
-
-
   for(int raum = 0; ;++raum){
-  if(R__El_anz[raum] == 0)break;
-  for(int i=0; i<anzKacheln; i++){
-  Loesung_R[i][0] = 0;
-  Loesung_R[i][1] = 0;
-  Loesung_R[i][2] = 0;
-  Loesung_R[i][3] = 0;
-  }
-  printf("loese raum %d\n", raum);
-  loesung_prim(raum, Loesung_R, 0,index_loesung);
-  //loesung_ober(raum, Loesung_R, 0,index_loesung);
+    if(R__El_anz[raum] == 0)break;
+    for(int i=0; i<anzKacheln; i++){
+      Loesung_R[i][0] = 0;
+      Loesung_R[i][1] = 0;
+      Loesung_R[i][2] = 0;
+      Loesung_R[i][3] = 0;
+    }
+    printf("loese raum %d\n", raum);
+    loesung_prim(raum, Loesung_R, 0,index_loesung);
   }
 
   printf("\n\nLoesung:\n");
   for(int i=0; i<loesungsindex; i++){
-  if(Loesung_liste[i][0] == 0 &&	Loesung_liste[i][1] == 0 && Loesung_liste[i][2] == 0 &&	Loesung_liste[i][3] == 0)continue;
-  printf("%u %u;%u %u\n", Loesung_liste[i][0],Loesung_liste[i][1],Loesung_liste[i][2],Loesung_liste[i][3]);
+    if(Loesung_liste[i][0] == 0 &&	Loesung_liste[i][1] == 0 && Loesung_liste[i][2] == 0 &&	Loesung_liste[i][3] == 0)continue;
+    printf("%u %u;%u %u\n", Loesung_liste[i][0],Loesung_liste[i][1],Loesung_liste[i][2],Loesung_liste[i][3]);
   }
 
   printf("index_loesung: %u\n",index_loesung);
 
   printf("validate1 =%d\n",validate());
   printf("validate2 =%d\n",validate2());
-
-  printf("anzKacheln: %d\n",anzKacheln );
-
-  exit(0);
-  //funktionstest1();
-  return EXIT_SUCCESS;
+  exit(1);
 }
