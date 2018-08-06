@@ -1,4 +1,4 @@
-#include "loesung_binSearch.c"
+#include "loesung_binSearchALT.c"
 //Funktionen des Algorithmus:
   //Phase1: Initialisieren der DS, Einlesen von String und umwandeln in unsigned int Element_liste[][2]:
     void init();
@@ -313,7 +313,7 @@ int testus(void){
     binSearchTEST();
     raeume_linearH();
     sort_raeume();
-    //printraeume();
+    printraeume();
     validate_raeume();
     /*
 

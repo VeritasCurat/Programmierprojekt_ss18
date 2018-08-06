@@ -12,8 +12,6 @@ static void EL_free_numbers(unsigned int **array, size_t size)
 
 static void EL_allozieren(){
   Element_liste = (unsigned int **)malloc(EL_platz * sizeof(*Element_liste));
-
-
 }
 
 static void EL_reallozieren(){
