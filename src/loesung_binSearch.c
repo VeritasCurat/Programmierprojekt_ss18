@@ -17,8 +17,7 @@
   static void EL_reallozieren();
   static void EL_allozieren();
   static void EL_einfuegen(unsigned int x, unsigned int y);
-  static void EL_ausgabe();
-  static void Array_freigabe(unsigned int **array, size_t size);
+  static void Array_freigabe(unsigned int **array, int size);
   void init();
   void einlesen();
   void koordinate_einlesen(char* zeile);
@@ -38,7 +37,6 @@
   static void R_sort();
   static void R_allozieren();
   static void R_einfuegen(unsigned int x, unsigned int y, int k);
-  static void R_ausgabe();
   void sort_raeume();
   int raeume_linearH_schritt(int raumnr,int nachbar_index, int x,int y);
   void raeume_linearH();
@@ -78,20 +76,24 @@ int strlength(char *eingabe) {
 
 //allozierten speicher freigeben
 void beenden(){
-  Array_freigabe(Element_liste, EL_anz);
-  Array_freigabe(Raeume, R_anz);
+  if(Element_liste != NULL) Array_freigabe(Element_liste, EL_anz);
+  if(Raeume != NULL) Array_freigabe(Raeume, R_platz);
+  if(nachbar_liste != NULL)free(nachbar_liste);
+  if(geloest_liste != NULL)free(geloest_liste);
 }
 
-static void Array_freigabe(unsigned int **array, size_t size){
-    for (size_t i = 0; i < size; i++)
-        free(array[i]);
-    free(array);
+static void Array_freigabe(unsigned int **array, int size){
+    for (int i = 0; i < size; i++){
+      if(array[i] == NULL)continue;
+      free(array[i]);
+    }
+    if(array != NULL) free(array);
 }
 
 static void EL_allozieren(){
   Element_liste = (unsigned int **)malloc(EL_platz * sizeof(*Element_liste));
   if(Element_liste == NULL){
-    printf("Elementliste konnte nicht alloziert werden!");
+    printf("None.");
     exit(0);
   }
 }
@@ -101,7 +103,7 @@ static void EL_reallozieren(){
   if(EL_platz < 100000) newnum = (EL_platz + 2) * 2;   /* 4, 12, 28, 60, ... */
   else{  newnum = (EL_platz + 2) + 100000; }
   unsigned int **newptr = (unsigned int **)realloc(Element_liste, newnum * sizeof(*Element_liste));
-  printf("EL_platz %d\n", EL_platz);
+  //printf("EL_platz %d\n", EL_platz);
   if (newptr == NULL){
       Array_freigabe(Element_liste, EL_anz);
       exit(1);
@@ -124,12 +126,6 @@ static void EL_einfuegen(unsigned int x, unsigned int y){
   Element_liste[EL_anz][0] = x;
   Element_liste[EL_anz][1] = y;
   EL_anz++;
-}
-
-static void EL_ausgabe(){
-  for(int zeile=0; zeile<EL_anz; zeile++){
-    printf("%d: (%u,%u)\n",zeile, Element_liste[zeile][0], Element_liste[zeile][1]);
-  }
 }
 
 void init(){
@@ -161,11 +157,11 @@ void koordinate_einlesen(char* zeile){
       a+=(unsigned) chartoint(zeile[i]);
     }
     else {
-      printf("illegales Zeichen! (%c)\n",zeile[i]);
+      printf("None\n");
       exit(-1);
     }
     if(a_len > 10){
-      printf("%s (%s)\n", "zu lange Zahlen!",zeile);
+      printf("None\n");
       exit(-1);
     }
   }
@@ -183,11 +179,11 @@ void koordinate_einlesen(char* zeile){
       b+=(unsigned) chartoint(zeile[i]);
     }
     else {
-      printf("illegales Zeichen! (%c)\n",zeile[i]);
+      printf("None\n");
       exit(-1);
     }
     if(b_len > 10){
-      printf("%s (%s)\n", "zu lange Zahlen! ",zeile);
+      printf("None\n");
       exit(-1);
     }
   }
@@ -197,14 +193,10 @@ void koordinate_einlesen(char* zeile){
     if(chartoint(zeile[i]) != -1) break;
   }
   if(a >= 4294967296 || b >= 4294967296 || a < 0 || b < 0){
-    printf("%s\n", "zu lange Zahlen!");
+    printf("None\n");
     exit(-1);
   }
-  // if(a == 0 && b == 0){ //TODO: nicht mehr in binSearch vorhanden?
-  //   fprintf(stderr, "(0,0) eingelesen, NULL-Problem loesen!");
-  //   exit(-1);
-  // }
-  //printf("A: %u B: %u\n", a,b);
+
   EL_einfuegen(a,b);
 }
 
@@ -251,9 +243,7 @@ int binSearch(unsigned int x, unsigned int y){
   }
   //if(binCompare(Element_liste[m][0], Element_liste[m][1], x, y) == 0)return m;
   if(Element_liste[m][0] == x && Element_liste[m][1] == y)return m;
-
   else{
-    //printf("  l=%d, r=%d, m=%d\n",l,r,m );
     return -1;
   }
 }
@@ -302,12 +292,6 @@ int sortiere_0_1 ( const void *pointer_a, const void *pointer_b )
 
 void nl_malloc(){
   nachbar_liste = (int *)malloc(nl_platz * sizeof(int));
-}
-
-void nl_ausgabe(){
-  for(int i=0; i<nl_anz; i++){
-    printf("%d: %d\n",i,nachbar_liste[i]);
-  }
 }
 
 void nl_einfuegen(int x){
@@ -379,12 +363,6 @@ static void R_allozieren(){
 
 }
 
-static void R_ausgabe(){
-  for(int zeile=0; zeile<R_anz; zeile++){
-    printf("%d: (%u,%u)\n",zeile, Raeume[zeile][0], Raeume[zeile][1]);
-  }
-}
-
 int raeume_linearH_schritt(int raumnr, int nachbar_index, int x,int y){
   int k = nachbar_liste[nachbar_index];
 
@@ -412,7 +390,7 @@ int raeume_linearH_schritt(int raumnr, int nachbar_index, int x,int y){
 void raeume_linearH(){
   R_allozieren();
 
-  if(EL_anz % 2 == 1){printf("Keine Loesung moeglich (ungerade Anzahl Kacheln!) %d\n",EL_anz); exit(0);}
+  if(EL_anz % 2 == 1){printf("None\n"); exit(0);}
   int raumnr = 0;
 
   int k=0;
@@ -475,7 +453,7 @@ void raeume_linearH(){
     if(gruppiert == EL_anz)break;
 
     if(nl_anz % 2 == 1){
-      printf("Ein Raum hat eine ungerade Anzahl von Kacheln (Raum %d: %d Kacheln)\n",raumnr, nl_anz);
+      printf("None\n");
       exit(-1);
     }
     for(int i=0; i<nl_anz; i++){
@@ -491,14 +469,54 @@ void raeume_linearH(){
 
 //Phase4
 
-void greedy(){
+void greedy(int raumstart, int raumende, int raumanzahl){
+  //printf("greedy: raumstart: %d, raumende: %d, raumanzahl: %d....\n", raumstart, raumende, raumanzahl);
+  int nachbarn =0;
 
-}
+  int i;
+  for(i=raumstart; i<=raumende; i++){
+        int geloest;
+        geloest = geloest_liste[Raeume[i][1]];
+        if(geloest > -1){
+          continue;
+        }
+        nachbarn = 0;
+        int nachbarindex =-1;
+        //printf("greedy betrachte: %d\n",i);
+      //hat ELement Raeume[i][1] genau einen Nachbarn, wenn ja welchen index hat dieser?
+        nachbarindex = binSearch(Element_liste[Raeume[i][1]][0],Element_liste[Raeume[i][1]][1]+1);
+        if(nachbarindex > -1){
+          ++nachbarn;
+        }
+        nachbarindex = binSearch(Element_liste[Raeume[i][1]][0],Element_liste[Raeume[i][1]][1]-1);
+        if(nachbarindex > -1){
+          if(nachbarn >= 1)continue;
+          ++nachbarn;
+        }
+        nachbarindex = binSearch(Element_liste[Raeume[i][1]][0]+1,Element_liste[Raeume[i][1]][1]);
+        if(nachbarindex > -1){
+          if(nachbarn >= 1)continue;
+          ++nachbarn;
+        }
+        nachbarindex = binSearch(Element_liste[Raeume[i][1]][0]-1,Element_liste[Raeume[i][1]][1]);
+        if(nachbarindex > -1){
+          if(nachbarn >= 1)continue;
+          ++nachbarn;
+        }
 
-void print_geloest_liste(){
-  for(int i=0; i<gruppiert; i++){
-    printf("%d: %d\n",i, geloest_liste[i]);
-  }
+      //wenn es einen Nachbarn gibt, die beiden Kacheln verbinden
+      if(nachbarn == 1 && nachbarindex > -1){
+        //printf("nachbarn eintragen: (%u,%u)(%u,%u) als %d\n",Element_liste[Raeume[i][1]][0],Element_liste[Raeume[i][1]][1],Element_liste[nachbarindex][0],Element_liste[nachbarindex][1],index_loesung );
+        geloest_liste[Raeume[i][1]] = index_loesung;
+        geloest_liste[nachbarindex]= index_loesung;
+
+        ++index_loesung;
+      }
+
+
+      //beide aus Raum austragen?        raumAnz-=2;
+
+    }
 }
 
 int loesung_prim(int startRaum, int endeRaum, int raumAnz){
@@ -509,7 +527,7 @@ int loesung_prim(int startRaum, int endeRaum, int raumAnz){
   }
 
   int i;
-  for(i=startRaum; i<endeRaum+raumAnz; i++){
+  for(i=startRaum; i<endeRaum+1; i++){
     //1. nehme erste verbleibende in Element_liste
     //pruefe ob kachel aus Element_liste schon in loesung
 
@@ -604,10 +622,11 @@ void loesung_master(){
   for(int i=0; i<gruppiert; ++i){
     if(i == gruppiert-1){
       raum_anz = raumende - raumstart;
-      printf("letzter Raum: %d: %d bis %d\n", Raeume[i][0],raumstart,raumende);
+      //printf("letzter Raum: %d: %d bis %d\n", Raeume[i][0],raumstart,raumende);
       //for(int j=0; j<raum_anz; j++)printf("raum %d: %d (%u,%u)\n",raumnr,j,raum[j][0],raum[j][1]);
+      greedy(raumstart, raumende-1,raum_anz);
       if(loesung_prim(raumstart, raumende-1, raum_anz) != 1){
-        printf("none\n");
+        printf("None\n");
         beenden();
         exit(0);
       }      raumstart = raumende +1;
@@ -617,14 +636,15 @@ void loesung_master(){
 
     if(i < gruppiert && Raeume[i][0] > raumnr){
       raum_anz = raumende - raumstart;
-      printf("neuer Raum: %d: %d bis %d\n", Raeume[i][0],raumstart,raumende-1);
+      //printf("neuer Raum: %d: %d bis %d\n", Raeume[i][0],raumstart,raumende-1);
       //for(int j=0; j<raum_anz; j++)printf("raum %d: %d (%u,%u)\n",raumnr,j,raum[j][0],raum[j][1]);
+      greedy(raumstart, raumende-1,raum_anz);
       if(loesung_prim(raumstart, raumende-1, raum_anz) != 1){
-        printf("none\n");
+        printf("None\n");
         beenden();
         exit(0);
       }
-      for(int j=raumstart; j<raumende; j++)printf("raum %d: %d: %d\n",raumnr,j,geloest_liste[j]);
+      //for(int j=raumstart; j<raumende; j++)printf("raum %d: %d: %d\n",raumnr,j,geloest_liste[j]);
       raumstart = raumende;
       raumnr = Raeume[i][0];
     }
@@ -635,7 +655,6 @@ void loesung_master(){
     ++raumende;
   }
 
-  print_geloest_liste();
 
 
   unsigned int Loesung[gruppiert][2];
@@ -647,32 +666,30 @@ void loesung_master(){
   qsort(Loesung, EL_anz, sizeof(int)*2, compL);
 
   for(int i=0; i<gruppiert; i+=2){
-    printf("%u,%u; ",  Element_liste[Loesung[i][0]][0], Element_liste[Loesung[i][0]][1]);
-    printf(" %u,%u\n",  Element_liste[Loesung[i+1][0]][0], Element_liste[Loesung[i+1][0]][1]);
+    printf("%u %u;",  Element_liste[Loesung[i][0]][0], Element_liste[Loesung[i][0]][1]);
+    printf("%u %u\n",  Element_liste[Loesung[i+1][0]][0], Element_liste[Loesung[i+1][0]][1]);
   }
 }
 void loesung_binSearch(){
   init();
-  printf("initialisiert ...\n");
+  //printf("initialisiert ...\n");
 
   einlesen();
-  printf("eingelesen ...\n");
+  //printf("eingelesen ...\n");
 
   EL_sort();
   //EL_ausgabe();
-  printf("Sortiert ...\n");
+  //printf("Sortiert ...\n");
 
   raeume_linearH();
   R_sort();
   //R_print();
-
-  printf("Raeume ...\n");
+  //printf("Raeume ...\n");
 
   loesung_master();
+  //printf("geloest ...\n");
 
-  printf("geloest ...\n");
-
-
+  beenden();
 }
 
-//int main(void){  loesung_binSearch();  exit(0);  beenden();}
+//int main(void){  loesung_binSearch();  exit(0); }

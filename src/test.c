@@ -1,4 +1,5 @@
 #include "loesung_binSearch.c"
+#include <sys/resource.h>
 
 //Testfunktionen
   //Phase1: Einlesen
@@ -78,8 +79,6 @@ int validate_raeume(){
   printf("Raeume ...");
   int valid=1;
   //ist jedes Element aus Raemen in Elementliste?
-  int anzraumkacheln = 0;
-  int raum = 0;
 
   if(gruppiert != EL_anz)valid = 0;
 
@@ -87,8 +86,6 @@ int validate_raeume(){
   if(valid == 0)return valid;
 
   //genügt jeder Raum den Raumeigenschaften (benachbart Eigenschaften) => jedes ELement hat MIN einen Nachbarn
-  int raumCHECK =0;
-  raum = 0;
   for(int i=0; i<R_anz; i++){
     if(binSearch(Element_liste[Raeume[i][1]][0],Element_liste[Raeume[i][1]][1]+1) > -1) continue;
     if(binSearch(Element_liste[Raeume[i][1]][0],Element_liste[Raeume[i][1]][1]-1) > -1) continue;
@@ -165,18 +162,50 @@ void printlist(){
 
 int testus(void){
   init();
+  //printf("initialisiert ...\n");
+
   einlesen();
+  //printf("eingelesen ...\n");
+
   EL_sort();
+  //printf("sortiert ...\n");
+
   //EL_ausgabe();
   raeume_linearH();
   R_sort();
-  raume_print();
+  //printf("raeume ...\n");
 
+  //raume_print();
   loesung_master();
+  //printf("geloest ...\n");
 
-  test_sort();
-  validate_raeume();
-  validate_loesung();
+
+  // test_sort();
+  // validate_raeume();
+  // validate_loesung();
+  return 0;
 }
 
-void main(){testus();}
+void setStackSize(){
+  const rlim_t kStackSize = 500 * 1024 * 1024;   // min stack size = 500 MB
+   struct rlimit rl;
+   int result;
+
+   result = getrlimit(RLIMIT_STACK, &rl);
+   if (result == 0)
+   {
+       if (rl.rlim_cur < kStackSize)
+       {
+           rl.rlim_cur = kStackSize;
+           result = setrlimit(RLIMIT_STACK, &rl);
+           if (result != 0)
+           {
+               fprintf(stderr, "setrlimit returned result = %d\n", result);
+           }
+       }
+   }
+
+}
+
+
+int main(){setStackSize();testus();}
