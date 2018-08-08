@@ -8,13 +8,9 @@
  ============================================================================
  */
 //TODO: mit devin klaeren: EL_sort() dynamisch;
-
- #include <string.h> //TODO: entfernen
-
  #include <stdio.h>
  #include <stdlib.h>
  #include <unistd.h>
- #include <stdint.h>
 
 
 //Phase1: Initialisieren der DS, Einlesen von String und umwandeln in unsigned int Element_liste[][2]:
@@ -40,21 +36,19 @@
   void nl_malloc();
   void nl_ausgabe();
   static void R_sort();
-  static void R_reallozieren();
   static void R_allozieren();
   static void R_einfuegen(unsigned int x, unsigned int y, int k);
   static void R_ausgabe();
-  static void R_freigabe(unsigned int **array, size_t size);
-  static void R_print();
   void sort_raeume();
   int raeume_linearH_schritt(int raumnr,int nachbar_index, int x,int y);
   void raeume_linearH();
 
 //Phase4: Loesung berechnen:
-  int loesungsschritt(int** Raum, int raumAnz, unsigned int** loesung, int index_loesung, int x, int y, int i);
-  int loesung_prim(unsigned int** Raum, int raumAnz, unsigned int** loesung, int index_loesung);
-  void loesung_binSearch();
+  int loesungsschritt(int raumstart, int raumende, int raumAnz, int x, int y, int i);
+  int loesung_prim(int raumstart, int raumende, int raumAnz);
+  void loesung_master(); //bereitet Datenstrukturen fuer loesung vor und ruft loesung_prim fuer raeume auf
 
+  void loesung_binSearch(); //fuehrt alle funktionen aus
 
 int debug2 = 0;
 int debug3 = 0;
@@ -65,18 +59,22 @@ int debug4 = 0;
 unsigned int **Element_liste = 0; int EL_platz=1000; int EL_anz=0;//hier werden alle Koordinaten gespeichert
 unsigned int **Raeume; int R_anz=0; int R_platz; int gruppiert = 0;
 int* nachbar_liste; int nl_anz=0; int nl_platz=1;
-unsigned int** raum;  int raum_anz=0; int raum_platz=2;
-unsigned int ** loesung; int index_loesung=0;
-/*
-unsigned int Loesung_R[1000][4]; 	int index_loesung=0; //
-unsigned int Loesung_liste[999983][4]; unsigned int loesungsindex = 0;
-unsigned int Loesung_Raeume[100][100000][4]; int R__El_anz[100];
-*/
-
-//markierung: Kachel in Raum, in loesung?
+int raum_anz=0; int raum_platz=2;
+int index_loesung=0;
 int* geloest_liste;
 
+//markierung: Kachel in Raum, in loesung?
+
 size_t liste_size = 999983;
+
+
+int strlength(char *eingabe) {
+    int i = 0;
+    while (eingabe[i] != '\0') {
+        i++;
+    }
+    return i;
+}
 
 //allozierten speicher freigeben
 void beenden(){
@@ -99,9 +97,11 @@ static void EL_allozieren(){
 }
 
 static void EL_reallozieren(){
-  int newnum = (EL_platz + 2) * 2;   /* 4, 12, 28, 60, ... */
+  int newnum;
+  if(EL_platz < 100000) newnum = (EL_platz + 2) * 2;   /* 4, 12, 28, 60, ... */
+  else{  newnum = (EL_platz + 2) + 100000; }
   unsigned int **newptr = (unsigned int **)realloc(Element_liste, newnum * sizeof(*Element_liste));
-  printf("%d\n", EL_platz);
+  printf("EL_platz %d\n", EL_platz);
   if (newptr == NULL){
       Array_freigabe(Element_liste, EL_anz);
       exit(1);
@@ -148,12 +148,12 @@ void koordinate_einlesen(char* zeile){
   unsigned int a,b; a=b=0;
   int a_len = 0; int b_len =0;
   int i=0;
-  for(;i<strlen(zeile); i++){
+  for(;i<strlength(zeile); i++){
     if(zeile[i]==' ')continue;
     if(chartoint(zeile[i]) != -1) break;
   }
 
-  for(;i<strlen(zeile); i++){
+  for(;i<strlength(zeile); i++){
     if(zeile[i]==' ')break;
     else if(chartoint(zeile[i]) != -1){
       if(a>0)++a_len;
@@ -170,12 +170,12 @@ void koordinate_einlesen(char* zeile){
     }
   }
 
-  for(;i<strlen(zeile); i++){
+  for(;i<strlength(zeile); i++){
     if(zeile[i]==' ')continue;
     if(chartoint(zeile[i]) != -1) break;
   }
 
-  for(;i<strlen(zeile); i++){
+  for(;i<strlength(zeile); i++){
     if(zeile[i]==' ' || zeile[i]=='\n')break;
     else if(chartoint(zeile[i]) != -1){
       if(b>0)++b_len;
@@ -192,7 +192,7 @@ void koordinate_einlesen(char* zeile){
     }
   }
 
-  for(;i<strlen(zeile); i++){
+  for(;i<strlength(zeile); i++){
     if(zeile[i]==' ')continue;
     if(chartoint(zeile[i]) != -1) break;
   }
@@ -234,7 +234,7 @@ int chartoint(char c){
 
 //liest unsigned int, gibt 11 stelligen String repraesentant aus
 int binSearch(unsigned int x, unsigned int y){
-  int l=0; int r=EL_anz-1; int m;
+  int l=0; int r=EL_anz-1; int m=r-l;
   while(l <= r){
     m = (int) ((r+l)/2);
     if(compare(Element_liste[m][0], Element_liste[m][1], x, y) < 0){
@@ -274,6 +274,7 @@ static int compare(unsigned int x1, unsigned y1, unsigned int x2, unsigned int y
     }
     else if(y1 == y2)return 0;
   }
+  return 0;
 }
 
 //-1 wenn a <° b, 1 wenn b >° a, 0 sonst; a <° b :<=> binMeld(A) < binMeld(B)
@@ -342,14 +343,6 @@ void EL_sort(){
 
 
 //Phase3
-static int comp_(const void* a, const void* b) {
-  const unsigned int* A = ( const unsigned int* )a;
-  const unsigned int* B = ( const unsigned int* )b;
-
-  if(A[0] - B[0] < 0)return -1;
-  else if(A[0] - B[0] > 0)return 1;
-  else return 0;
-}
 
 static void R_sort(){
   unsigned int transfer[R_anz][2];
@@ -363,12 +356,6 @@ static void R_sort(){
   for(int i=0; i<EL_anz; i++){
     Raeume[i][0]=transfer[i][0];
     Raeume[i][1]=transfer[i][1];
-  }
-}
-
-static void R_print(){
-  for(int i=0; i<gruppiert; i++){
-    printf("Raum: %d, Index:%d, (%u,%u)\n",Raeume[i][0], Raeume[i][1], Element_liste[Raeume[i][1]][0],Element_liste[Raeume[i][1]][1]);
   }
 }
 
@@ -508,127 +495,83 @@ void greedy(){
 
 }
 
-void r_loeschen(){
-  int newnum = 1;   /* 4, 12, 28, 60, ... */
-  unsigned int **newptr = (unsigned int **)realloc(raum, newnum * sizeof(*raum));
-  if (newptr == NULL){
-      for (size_t i = 0; i < raum_anz; i++)free(raum[i]);
-      free(raum);
-      beenden();
-      exit(1);
+void print_geloest_liste(){
+  for(int i=0; i<gruppiert; i++){
+    printf("%d: %d\n",i, geloest_liste[i]);
   }
-  raum_platz = newnum;
-  raum = newptr;
-  raum_anz = 0;
 }
 
-void r_einfuegen(unsigned int x, unsigned y){
-  if(raum_platz == raum_anz){
-    //printf("%d ~ %d\n", raum_platz, raum);
-    int newnum = (raum_platz * 2)+2;   /* 4, 12, 28, 60, ... */
-    unsigned int **newptr = (unsigned int **)realloc(raum, newnum * sizeof(*raum));
-    if (newptr == NULL){
-        for (size_t i = 0; i < raum_anz; i++)free(raum[i]);
-        free(raum);
-        beenden();
-        exit(1);
-    }
-    raum_platz = newnum;
-    raum = newptr;
-  }
-
-  raum[raum_anz] = (unsigned int *)malloc(2 * sizeof(unsigned int));
-
-  raum[raum_anz][0] = x;
-  raum[raum_anz][1] = y;
-  ++raum_anz;
-}
-
-void r_allozieren(){
-  raum = (unsigned int **)malloc(2 * sizeof(*raum));
-}
-
-int loesung_prim(int** Raum, int raumAnz, unsigned int** loesung, int index_loesung){
+int loesung_prim(int startRaum, int endeRaum, int raumAnz){
   //printf("raum: %d, %d/ %d  Elemente geloest \n",raum,index_loesung,R__El_anz[raum]/2);
   //gueltige loesung: basisfall
   if(raumAnz == 0){
     return 1;
   }
 
-  int suche=0;
-
   int i;
-  for(i=0; i<raumAnz; i++){
+  for(i=startRaum; i<endeRaum+raumAnz; i++){
     //1. nehme erste verbleibende in Element_liste
     //pruefe ob kachel aus Element_liste schon in loesung
-    if(index_loesung[i] == 0){
-    }
 
     int geloest;
-    geloest = geloest_liste[i];
-    if(geloest == 1){
+    geloest = geloest_liste[Raeume[i][1]];
+    if(geloest > -1){
       continue;
     }
-    if(debug4)printf("waehle: (%u,%u) (gruppiert:%d)\n",  Element_liste[i][0],Element_liste[i][1],index_loesung);
-
+    if(debug4)printf("waehle: (%u,%u) (gruppiert:%d)\n",  Element_liste[Raeume[i][1]][0],Element_liste[Raeume[i][1]][1],index_loesung);
+    //if(debug4)print_geloest_liste();
      //2. suche Nachbarn
     //oberer Nachbarn?
       int ret =0;
-      ret = loesungsschritt(Raum, raumAnz,loesung, index_loesung, 0 , 1,i);
+      ret = loesungsschritt(startRaum, endeRaum, raumAnz, 0 , 1,Raeume[i][1]);
       if(ret == 1)return 1;
 
     //unterer Nachbarn?
-      ret = loesungsschritt(Raum, raumAnz,loesung, index_loesung, 0 , -1,i);
+      ret = loesungsschritt(startRaum, endeRaum, raumAnz, 0 , -1,Raeume[i][1]);
       if(ret == 1)return 1;
 
     //rechter Nachbarn?
-      ret = loesungsschritt(Raum, raumAnz,loesung, index_loesung, 1, 0,i);
+      ret = loesungsschritt(startRaum, endeRaum, raumAnz, 1, 0,Raeume[i][1]);
       if(ret == 1)return 1;
 
     //linker Nachbarn?
-      ret = loesungsschritt(Raum, raumAnz,loesung, index_loesung, -1 , 0,i);
+      ret = loesungsschritt(startRaum, endeRaum, raumAnz, -1 , 0,Raeume[i][1]);
       if(ret == 1) return 1;
 
     //printf("keinen nachbar fuer (%u,%u) (gruppiert: %d)\n",Raeume[raum][i][0], Raeume[raum][i][1],index_loesung);
     if(index_loesung > 0)return 0;
+    if(debug4)printf("springe zurueck ...\n");
   }//Ende FOR Schleife
-
-  // if(sprung == EL_anz-1)return 2;
-  if(debug4)printf("springe zurueck ...\n");
-  return 2;
+  // printf("none\n");
+  // exit(1);
+  return 1;
 }
 
-int loesungsschritt(int** Raum, int raumAnz, unsigned int** loesung, int index_loesung, int x, int y, int i){
+int loesungsschritt(int startRaum, int endeRaum, int raumAnz, int x, int y, int i){
   //existiert nachbar
   int nachbar_index = binSearch(Element_liste[i][0]+x, Element_liste[i][1]+y);
+  if(debug4 == 1) printf("	Nachbarn?: (%u,%u) (%u,%u)\n",Element_liste[i][0], Element_liste[i][1],Element_liste[i][0]+x, Element_liste[i][1]+y);
   if(nachbar_index != -1){
     //pruefe ob kachel aus Element_liste schon in loesung
-    int geloest = geloest_liste[nachbar_index];
-    if(geloest == 0){
-      //printf("%d%d		neue Nachbarn: (%u,%u) (%u,%u) (gruppiert: %d)\n",x,y, Raeume[raum][i][0], Raeume[raum][i][1], Raeume[raum][i][0]+x, Raeume[raum][i][1]+y,index_loesung);
-      geloest_liste[i] = 1;
-      geloest_liste[nachbar_index]=1;
+    if(debug4 == 1) printf("    in loesung?: (%u,%u)\n",Element_liste[i][0]+x, Element_liste[i][1]+y);
 
-      loesung[index_loesung][0] = Element_liste[i][0];
-      loesung[index_loesung][1] = Element_liste[i][1];
-      loesung[index_loesung][2] = Element_liste[nachbar_index][0];
-      loesung[index_loesung][3] = Element_liste[nachbar_index][1];
+    int geloest = geloest_liste[nachbar_index];
+    if(geloest == -1){
+      if(debug4 == 1) printf("	Paar eintragen (%d): (%u,%u) (%u,%u)\n",index_loesung,Element_liste[i][0], Element_liste[i][1],Element_liste[i][0]+x, Element_liste[i][1]+y);
+
+      geloest_liste[i] = index_loesung;
+      geloest_liste[nachbar_index]= index_loesung;
 
       ++index_loesung;
       raumAnz-=2;
 
-      int l = loesung_prim(Raum, raumAnz,  loesung, index_loesung);
+      int l = loesung_prim(startRaum, endeRaum, raumAnz);
       if(l == 1) return 1;
       else{
         //printf("%d%d	 Nachbarn loeschen: (%u,%u) (%u,%u) (gruppiert: %d)\n",x,y, Raeume[raum][i][0], Raeume[raum][i][1], Raeume[raum][i][0]+x, Raeume[raum][i][1]+y,index_loesung);
-        geloest_liste[i] = 0;
-        geloest_liste[nachbar_index] = 0;
+        geloest_liste[i] = -1;
+        geloest_liste[nachbar_index] = -1;
         //teilloesung nicht valide => rollback
-        loesung[index_loesung][0] = 0;
-        loesung[index_loesung][1] = 0;
-        loesung[index_loesung][2] = 0;
-        loesung[index_loesung][3] = 0;
-
         --index_loesung;
         raumAnz+=2;
 
@@ -636,68 +579,100 @@ int loesungsschritt(int** Raum, int raumAnz, unsigned int** loesung, int index_l
       }
     }
   }
-
-
   return 2;
 }
 
+static int compL(const void* a, const void* b) {
+  const int* A = (const int* )a;
+  const int* B = (const int* )b;
+
+  if(A[1] > B[1])return 1;
+  else if(A[1] < B[1])return -1;
+  else return 0;
+}
+
+void loesung_master(){
+  geloest_liste = (int*) malloc(EL_anz*sizeof(int));
+  for(int i=0; i<EL_anz; i++)geloest_liste[i] = -1;
+
+
+  int raumstart=0;
+  int raumende=0;
+  int raum_anz=0;
+  int raumnr = 0;
+
+  for(int i=0; i<gruppiert; ++i){
+    if(i == gruppiert-1){
+      raum_anz = raumende - raumstart;
+      printf("letzter Raum: %d: %d bis %d\n", Raeume[i][0],raumstart,raumende);
+      //for(int j=0; j<raum_anz; j++)printf("raum %d: %d (%u,%u)\n",raumnr,j,raum[j][0],raum[j][1]);
+      if(loesung_prim(raumstart, raumende-1, raum_anz) != 1){
+        printf("none\n");
+        beenden();
+        exit(0);
+      }      raumstart = raumende +1;
+      raumnr = Raeume[i][0];
+    }
+
+
+    if(i < gruppiert && Raeume[i][0] > raumnr){
+      raum_anz = raumende - raumstart;
+      printf("neuer Raum: %d: %d bis %d\n", Raeume[i][0],raumstart,raumende-1);
+      //for(int j=0; j<raum_anz; j++)printf("raum %d: %d (%u,%u)\n",raumnr,j,raum[j][0],raum[j][1]);
+      if(loesung_prim(raumstart, raumende-1, raum_anz) != 1){
+        printf("none\n");
+        beenden();
+        exit(0);
+      }
+      for(int j=raumstart; j<raumende; j++)printf("raum %d: %d: %d\n",raumnr,j,geloest_liste[j]);
+      raumstart = raumende;
+      raumnr = Raeume[i][0];
+    }
+
+
+
+    //printf("%d %d\n",i, Raeume[i][0]);
+    ++raumende;
+  }
+
+  print_geloest_liste();
+
+
+  unsigned int Loesung[gruppiert][2];
+  for(int i=0; i<R_anz; i++){
+    Loesung[i][0]=i;
+    Loesung[i][1]=geloest_liste[i];
+  }
+
+  qsort(Loesung, EL_anz, sizeof(int)*2, compL);
+
+  for(int i=0; i<gruppiert; i+=2){
+    printf("%u,%u; ",  Element_liste[Loesung[i][0]][0], Element_liste[Loesung[i][0]][1]);
+    printf(" %u,%u\n",  Element_liste[Loesung[i+1][0]][0], Element_liste[Loesung[i+1][0]][1]);
+  }
+}
 void loesung_binSearch(){
   init();
+  printf("initialisiert ...\n");
+
   einlesen();
+  printf("eingelesen ...\n");
+
   EL_sort();
   //EL_ausgabe();
+  printf("Sortiert ...\n");
+
   raeume_linearH();
   R_sort();
   //R_print();
 
-  geloest_liste = (int*) malloc(EL_anz*sizeof(int));
-  for(int i=0; i<EL_anz; i++)geloest_liste[i] = 0;
+  printf("Raeume ...\n");
 
-  loesung = (unsigned int**) malloc((EL_anz/2)*sizeof(int)*4);
-  for(int i=0; i<EL_anz/2; i++){
-    loesung[i] = (unsigned int *)malloc(4 * sizeof(unsigned int));
-    loesung[i][0] = loesung[i][1] = loesung[i][2] = loesung[i][3] = 0;
-  }
+  loesung_master();
 
-  r_allozieren();
-
-  int raumnr=0;
-
-  for(int i=0; i<gruppiert; ++i){
-    if(i < gruppiert && Raeume[i][0] > raumnr){
-      loesung_prim(raum, raum_anz, loesung, index_loesung);
-      //for(int j=0; j<raum_anz; j++)printf("raum %d: %d (%u,%u)\n",raumnr,j,raum[j][0],raum[j][1]);
-      raumnr = Raeume[i][0];
-      r_loeschen();
-      printf("neuer Raum: %d\n", Raeume[i+1][0]);
-    }
-
-    r_einfuegen(Element_liste[Raeume[i][1]][0],Element_liste[Raeume[i][1]][1]);
-    if(i == gruppiert-1){
-      loesung_prim(raum, raum_anz, loesung, index_loesung);
-      //for(int j=0; j<raum_anz; j++)printf("raum %d: %d (%u,%u)\n",raumnr,j,raum[j][0],raum[j][1]);
-      raumnr = Raeume[i][0];
-      r_loeschen();
-    }
-  }
+  printf("geloest ...\n");
 
 
-
-  exit(0);
-
-  printf("\n\nLoesung:\n");
-  for(int i=0; i<index_loesung; i++){
-    if(loesung[i][0] == 0 &&	loesung[i][1] == 0 && loesung[i][2] == 0 &&	loesung[i][3] == 0)continue;
-    printf("%u %u;%u %u\n", loesung[i][0],loesung[i][1],loesung[i][2],loesung[i][3]);
-  }
-
-  printf("index_loesung: %u\n",index_loesung);
 }
 
-int main(void){
-  loesung_binSearch();
-  exit(0);
-
-
-  beenden();
-}
+//int main(void){  loesung_binSearch();  exit(0);  beenden();}

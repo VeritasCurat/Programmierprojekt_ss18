@@ -1,0 +1,8 @@
+(x,y)=KachelArray[0] ... KachelArray[n]{
+  1.(x,y) in Lösung?
+  2. linker Nachbar von (x,y)
+      in loesung?
+  ...
+  5. unterer Nachbar von (x,y)
+      in loesung?
+}

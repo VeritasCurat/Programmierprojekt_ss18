@@ -1,30 +1,4 @@
-#include "loesung_binSearchALT.c"
-//Funktionen des Algorithmus:
-  //Phase1: Initialisieren der DS, Einlesen von String und umwandeln in unsigned int Element_liste[][2]:
-    void init();
-    void einlesen();
-    void koordinate_einlesen(char* zeile);
-    int chartoint(char c);
-    void einfuegen(unsigned int x,unsigned int y);
-    int legalesZeichen(char c);
-
-  //Phase2: Sortieren der Liste mit Quicksort:
-    int binSearch(unsigned int x, unsigned int y);
-    static int compare(unsigned int x1, unsigned y1, unsigned int x2, unsigned int y2);
-    static int comp(const void* a, const void* b);
-    void sort();
-
-  //Phase3: Raumeinteilung (Raum = Menge von Kachelplätzen, sodass alle die einen Nachbar aus Menge haben):
-    void sort_raeume();
-    int raeume_linearH_schritt(int index, int i, int gruppiert, int x,int y);
-    void raeume_linearH();
-
-  //Phase4: Loesung berechnen:
-    int loesungsschritt(int raum, unsigned int loesung[][4], int index_loesung_raum, int index_loesung, int x, int y, int i);
-    int loesung_prim(int raum, unsigned int loesung[][4], int index_loesung_raum, int index_loesung);
-    void loesung_binSearch();
-
-
+#include "loesung_binSearch.c"
 
 //Testfunktionen
   //Phase1: Einlesen
@@ -38,7 +12,7 @@
   void binSearchTEST();
   int lineare_suche(unsigned int x, unsigned int y);
   int abs(int a);
-  int benachbart(unsigned int x[], unsigned int y[]);
+  int Benachbart(unsigned int x[], unsigned int y[]);
   int validate_raeume();
 
   //Phase4: Lösen
@@ -48,7 +22,7 @@
 //Phase 2:
 void test_sort(){
   printf("Sortierung ...");
-  for(int i=0; i<anzKacheln-1; i++){
+  for(int i=0; i<EL_anz-1; i++){
     if(compare(Element_liste[i][0], Element_liste[i][1],Element_liste[i+1][0], Element_liste[i+1][1]) > 0){
       printf("FEHLER in sortierung: %d,%d \n",i,i+1);
       printf("%u,%u > %u,%u \n",Element_liste[i][0], Element_liste[i][1],Element_liste[i+1][0], Element_liste[i+1][1]);
@@ -61,7 +35,7 @@ void test_sort(){
 void binSearchTEST(){
   printf("binSearch TEST ...");
   int fehlgeschlagen=0;
-  for(int i=0; i<anzKacheln; i++){
+  for(int i=0; i<EL_anz; i++){
     //printf("(%u,%u): \n",Element_liste[i][0],Element_liste[i][1]);
 
     if(binSearch(Element_liste[i][0],Element_liste[i][1]) == -1){
@@ -81,7 +55,7 @@ void binSearchTEST(){
 }
 
 int lineare_suche(unsigned int x, unsigned int y){
-  for(int i=0; i< anzKacheln; i++){
+  for(int i=0; i< EL_anz; i++){
     if(Element_liste[i][0] == x && Element_liste[i][1] == y){
       return i;
 
@@ -95,230 +69,114 @@ int abs(int a){
   return a;
 }
 
-int benachbart(unsigned int x[], unsigned int y[]){
+int Benachbart(unsigned int x[], unsigned int y[]){
   if(abs((x[0] - y[0]) + (x[1] - y[1])) == 1) return 1;
   return 0;
 }
 
 int validate_raeume(){
-  printf("Raumeinteilung ...");
+  printf("Raeume ...");
   int valid=1;
   //ist jedes Element aus Raemen in Elementliste?
   int anzraumkacheln = 0;
   int raum = 0;
 
-  while(R__El_anz[raum] != 0){
-    for(int i=0; i<R__El_anz[raum]; i++){
-      if(Raeume[raum][i][0] != -1 && Raeume[raum][i][0] != -1){
-      int k;
-        if(binSearch(Raeume[raum][i][0],Raeume[raum][i][1]) == -1){
-          printf("Element %d aus Raum %d existiert nicht!\n",i,raum);
-        }
-      }
-    }
-    ++raum;
-  }
+  if(gruppiert != EL_anz)valid = 0;
+
+  //Raumgroesse = Elementliste
   if(valid == 0)return valid;
 
-  //ist jedes Element aus Elementliste in Raum?
-  if(gruppiert < anzKacheln){
-    for(int i=0; i<anzKacheln; i++){
-      if(gruppiert_liste[i] == 0){
-        printf("Element %d (%u,%u) nicht gruppiert!\n",i,Element_liste[i][0],Element_liste[i][1]);
-      }
-    }
-  }
-  if(valid == 0)return valid;
-
-
-  //genügt jeder Raum den Raumeigenschaften (benachbart Eigenschaften)
+  //genügt jeder Raum den Raumeigenschaften (benachbart Eigenschaften) => jedes ELement hat MIN einen Nachbarn
   int raumCHECK =0;
   raum = 0;
-  while(R__El_anz[raum] > 0){
-  for(int i=0; i<R__El_anz[raum]; ++i){
-    //linker Nachbar?
-      if(benachbart(Raeume[raum][i],Raeume[raum][i-1]) == 1){
-        continue;
-      }
-    //rechter Nachbar?
-      if(benachbart(Raeume[raum][i],Raeume[raum][i-1]) == 1){
-        continue;
-      }
-    //oberer Nachbar?
-      int k1=i;
-      int signal = 0;
-      while(k1 > 0){
-        if(benachbart(Raeume[raum][i],Raeume[raum][k1]) == 1) {signal = 1; break;}
-        if(abs(Raeume[raum][k1][0] - Raeume[raum][i][0]) > 1)break;
-        --k1;
-      }
-      if(signal == 1)continue;
-    //unterer Nachbar?
-      int k2 = i;
-      signal = 0;
-      while(k2 < anzKacheln){
-        if(benachbart(Raeume[raum][i],Raeume[raum][k2]) == 1) {signal = 1; break;}
-        if(abs(Raeume[raum][k2][0] - Raeume[raum][i][0]) > 2)break;
-        ++k2;
-      }
-      if(signal == 1)continue;
-
-      valid = 0;
-      printf("Element %d (%u,%u) hat keinen Nachbarn!\n",i,Raeume[raum][i][0],Raeume[raum][i][1]);
-      //printf("    k1 = %d, k2 = %d\n",k1,k2);
-
-    }
-    ++raum;
-
-
-    // for(int j=0; j<R__El_anz[raum]; ++j){
-    //       if(benachbart(Raeume[raum][i],Raeume[raum][j]) == 1){
-    //         raumCHECK+=(i+1);
-    //         // printf("%d benachbart: (%u,%u)(%u,%u)\n",i,Raeume[raum][i][0],Raeume[raum][i][1],Raeume[raum][j][0],Raeume[raum][j][1] );
-    //         break;
-    //       }
-    // }
-
-
-    // if(raumCHECK != ((R__El_anz[raum] * (R__El_anz[raum]+1))/2)){
-    //   printf("Raum %i nicht zusammenhaengend %u != %u !\n",raum,raumCHECK,((R__El_anz[raum] * (R__El_anz[raum]+1))/2));
-    //   valid = 0;
-    // }
-    // ++raum;
-    // raumCHECK = 0;
-    // }
+  for(int i=0; i<R_anz; i++){
+    if(binSearch(Element_liste[Raeume[i][1]][0],Element_liste[Raeume[i][1]][1]+1) > -1) continue;
+    if(binSearch(Element_liste[Raeume[i][1]][0],Element_liste[Raeume[i][1]][1]-1) > -1) continue;
+    if(binSearch(Element_liste[Raeume[i][1]][0]+1,Element_liste[Raeume[i][1]][1]) > -1) continue;
+    if(binSearch(Element_liste[Raeume[i][1]][0]-1,Element_liste[Raeume[i][1]][1]) > -1) continue;
+    valid =0;
   }
+
   if(valid == 1)printf(" OK!\n");
   else printf(" nicht OK!\n");
 
   return valid;
 }
 
+
+
 //Phase 4:
-int validate(){
-  int sum_l=0;
-  for(int i=0; i<loesungsindex; i++){
-  if(Loesung_liste[i][0] == 0 &&	Loesung_liste[i][1] == 0 && Loesung_liste[i][2] == 0 &&	Loesung_liste[i][3] == 0)break;
-  sum_l+=Loesung_liste[i][0]+Loesung_liste[i][1]+Loesung_liste[i][2] +Loesung_liste[i][3];
-  if(abs(Loesung_liste[i][0] - Loesung_liste[i][2])  +	abs(Loesung_liste[i][1] -	Loesung_liste[i][3]) != 1){
-  printf("FALSCH: %d %d;%d %d\n", Loesung_liste[i][0],Loesung_liste[i][1],Loesung_liste[i][2],Loesung_liste[i][3]);
-  return 0;
-  }
-  }
-  int sum_e=0;
-  for(int k=0; k<anzKacheln; k++){
-  sum_e += Element_liste[k][0]+Element_liste[k][1];
-  }
-  if(sum_e != sum_l)return 0;
-  return 1;
-}
 
-int validate2(){
-  int drin = 0;
-  int loesungsindex_ = 0;
-  for(int i=0; i<999983; i++){
-  if(Loesung_liste[i][0] == 0 &&	Loesung_liste[i][1] == 0 && Loesung_liste[i][2] == 0 &&	Loesung_liste[i][3] == 0)continue;
-  //printf("%u %u;%u %u\n", Loesung_liste[i][0],Loesung_liste[i][1],Loesung_liste[i][2],Loesung_liste[i][3]);
-  ++loesungsindex_;
-  drin = 0;
-  for(int k=0; k<anzKacheln; k++){
-  if(Loesung_liste[i][0] == Element_liste[k][0] && Loesung_liste[i][1] == Element_liste[k][1]){
-  drin = 1; break;
-  }
-  if(Loesung_liste[i][2] == Element_liste[k][0] &&	Loesung_liste[i][3] == Element_liste[k][1]){
-  drin = 1; break;
-  }
-  }
-  if(drin == 0)printf("(%u,%u) nicht in ElementDat\n",Loesung_R[i][0], Loesung_R[i][1]);
+int validate_loesung(){
+  printf("Loesung ... ");
+  int valid = 1;
+  //geloest == EL_anz
+  if(index_loesung*2 != EL_anz)valid = 0;
+
+  unsigned int Loesung[gruppiert][2];
+  for(int i=0; i<R_anz; i++){
+    Loesung[i][0]=i;
+    Loesung[i][1]=geloest_liste[i];
   }
 
-  for(int k=0; k<anzKacheln;k++){
-  //printf("%d: elementcheck_loesung: (%d,%d)\n", k,Element_liste[k][0], Element_liste[k][1]);
-  drin = 0;
-  for(int i =0; i<999983; i++){
-  if(Loesung_liste[i][0] == 0 &&	Loesung_liste[i][1] == 0 && Loesung_liste[i][2] == 0 &&	Loesung_liste[i][3] == 0)continue;
-  //printf("%u %u;%u %u\n", Loesung_liste[i][0],Loesung_liste[i][1],Loesung_liste[i][2],Loesung_liste[i][3]);
-  //++loesungsindex_;
-  if(Loesung_liste[i][0] == Element_liste[k][0] && Loesung_liste[i][1] == Element_liste[k][1]){
-  drin = 1; break;
-  }
-  if(Loesung_liste[i][2] == Element_liste[k][0] && Loesung_liste[i][3] == Element_liste[k][1]){
-  drin = 1; break;
-  }
-  }
-  if(drin == 0)printf("(%u,%u) nicht in Loesung!\n",Element_liste[k][0],Element_liste[k][1]);
-  }
+  qsort(Loesung, EL_anz, sizeof(int)*2, compL);
 
-  int dopplungen =0;
-  for(int i=0; i<999983; i++){
-  if(Loesung_liste[i][0] == 0 &&	Loesung_liste[i][1] == 0 && Loesung_liste[i][2] == 0 &&	Loesung_liste[i][3] == 0)continue;
-  for(int j=i+1; j<999983; j++){
-  if(Loesung_liste[j][0] == 0 &&	Loesung_liste[j][1] == 0 && Loesung_liste[j][2] == 0 &&	Loesung_liste[j][3] == 0)continue;
-
-  if(Loesung_liste[i][0] == Loesung_liste[j][0] &&	Loesung_liste[i][1] == Loesung_liste[j][1]){
-    printf("1 (%u,%u) doppelt in Loesung!\n",Loesung_liste[j][0],Loesung_liste[j][1]);
-  ++dopplungen;
-  Loesung_liste[i][0] = Loesung_liste[j][0] = Loesung_liste[i][1] = Loesung_liste[j][1] = 0;
-  continue;
-  }
-  if(Loesung_liste[i][0] == Loesung_liste[j][2] &&	Loesung_liste[i][1] == Loesung_liste[j][3]){
-  printf("2 (%u,%u) doppelt in Loesung!\n",Loesung_liste[j][2],Loesung_liste[j][3]);
-  ++dopplungen;
-  Loesung_liste[i][0] = Loesung_liste[j][2] = Loesung_liste[i][1] = Loesung_liste[j][3] = 0;
-  continue;
-  }
-  if(Loesung_liste[i][2] == Loesung_liste[j][0] &&	Loesung_liste[i][3] == Loesung_liste[j][1]){
-  printf("3 (%u,%u) doppelt in Loesung!\n",Loesung_liste[j][0],Loesung_liste[j][1]);
-  ++dopplungen;
-  Loesung_liste[i][2] = Loesung_liste[j][0] =	Loesung_liste[i][3] = Loesung_liste[j][1] = 0;
-  continue;
-  }
-  if(Loesung_liste[i][2] == Loesung_liste[j][2] &&	Loesung_liste[i][3] == Loesung_liste[j][3]){
-  printf("4 (%u,%u) doppelt in Loesung!\n",Loesung_liste[j][0],Loesung_liste[j][1]);
-  ++dopplungen;
-  Loesung_liste[i][2] = Loesung_liste[j][2] = Loesung_liste[i][3] = Loesung_liste[j][3] = 0;
-  continue;
-  }
-  //i0 i1 i2 i3
-  //j0 j1 j2 j3
-  }
-
-  }
-
-
-  return 1;
-}
-
-void printraeume(){
-  int index =0;
-  while(R__El_anz[index] != 0){
-    printf("Raum %d (%d):\n",index,R__El_anz[index]);
-    for(int i=0; i<R__El_anz[index]; i++){
-      printf("%d: x: %u, y: %u\n",i, Raeume[index][i][0], Raeume[index][i][1]);
+  if(index_loesung*2 < EL_anz){
+    printf("index_loesung < EL_anz: %d < %d\n",index_loesung*2, EL_anz);
+    for(int i=0; i<EL_anz; i++){
+      if(geloest_liste[i] == -1){
+        printf("%d nicht in Loesung\n", i);
+        //rintf("nicht in Loesungs: (%u,%u)\n",Element_liste[geloest_liste[i]][0], Element_liste[geloest_liste[i]][1]);
+      }
     }
-  ++index;
+  }
+
+  for(int i=0; i<gruppiert; i+=2){
+    int benachbart = Benachbart(Element_liste[Loesung[i][0]], Element_liste[Loesung[i+1][0]]);
+    if(benachbart!= 1){
+      valid =0;
+      printf("nicht benachbart: (%u,%u)(%u,%u)\n",Element_liste[Loesung[i][0]][0], Element_liste[Loesung[i][0]][1], Element_liste[Loesung[i+1][0]][0], Element_liste[Loesung[i+1][0]][1]);
+    }
+  }
+
+  if(valid == 1)printf(" OK!\n");
+  else printf(" nicht OK!\n");
+
+  return valid;
+}
+
+
+
+
+
+
+
+static void raume_print(){
+  for(int i=0; i<gruppiert; i++){
+    printf("%d Raum: %d, Index:%d, (%u,%u)\n",i,Raeume[i][0], Raeume[i][1], Element_liste[Raeume[i][1]][0],Element_liste[Raeume[i][1]][1]);
   }
 }
 
 void printlist(){
-  for(int i=0; i<anzKacheln; i++){
+  for(int i=0; i<EL_anz; i++){
     printf("%u: A: %u, B: %u\n", i, Element_liste[i][0] , Element_liste[i][1]);
   }
 }
 
 int testus(void){
-    einlesen();
-    sort();
-    test_sort();
-    binSearchTEST();
-    raeume_linearH();
-    sort_raeume();
-    printraeume();
-    validate_raeume();
-    /*
+  init();
+  einlesen();
+  EL_sort();
+  //EL_ausgabe();
+  raeume_linearH();
+  R_sort();
+  raume_print();
 
+  loesung_master();
 
-    */
+  test_sort();
+  validate_raeume();
+  validate_loesung();
 }
 
 void main(){testus();}

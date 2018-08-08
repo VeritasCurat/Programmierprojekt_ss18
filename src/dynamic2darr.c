@@ -17,7 +17,7 @@ static void EL_allozieren(){
 static void EL_reallozieren(){
   int newnum = (EL_platz + 2) * 2;   /* 4, 12, 28, 60, ... */
   unsigned int **newptr = (unsigned int **)realloc(Element_liste, newnum * sizeof(*Element_liste));
-  printf("%d\n", EL_platz);
+  printf("%d (%d)\n", EL_platz,sizeof(*Element_liste));
   if (newptr == NULL)
   {
       EL_free_numbers(Element_liste, EL_anz);
@@ -55,8 +55,10 @@ int main(void)
     EL_allozieren();
     EL_einfuegen(2,0);
 
-    for(unsigned int zeile=0; zeile<1000000; zeile++){
-        EL_einfuegen(zeile,0);
+    int i=0;
+    while(1){
+        EL_einfuegen(i,0);
+        i++;
     }
 
     EL_ausgabe();
